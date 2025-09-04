@@ -24,13 +24,15 @@ from split_monkey_patch import fit
 from verl import DataProto
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 from verl.utils.reward_score import gsm8k, math
-
+from verl.utils.reward_score import gamellm
 
 def _select_rm_score_fn(data_source):
     if data_source == "openai/gsm8k":
         return gsm8k.compute_score
     elif data_source == "lighteval/MATH":
         return math.compute_score
+    elif data_source == "gamellm":
+        return gamellm.compute_score
     else:
         raise NotImplementedError
 

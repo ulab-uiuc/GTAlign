@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Preprocess the GSM8k dataset to parquet format
+Preprocess the gamellm dataset to parquet format
 """
 
 import argparse
@@ -34,7 +34,7 @@ def extract_solution(solution_str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--local_dir", default="/mnt/bn/heheda/verl/data/gsm8k")
+    parser.add_argument("--local_dir", default="~/data/gsm8k")
     parser.add_argument("--hdfs_dir", default=None)
 
     args = parser.parse_args()
@@ -51,11 +51,11 @@ if __name__ == "__main__":
     # add a row to each data item that represents a unique id
     def make_map_fn(split):
         def process_fn(example, idx):
-            question_raw = example.pop("question")
+            question_raw = example.pop("single_turn_prompt")
 
             question = question_raw + " " + instruction_following
 
-            answer_raw = example.pop("answer")
+            answer_raw = example.pop("single_turn_completion")
             solution = extract_solution(answer_raw)
             data = {
                 "data_source": data_source,

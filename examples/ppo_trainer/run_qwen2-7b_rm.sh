@@ -6,14 +6,14 @@ set -x
 #
 #   python3 examples/data_preprocess/math_dataset.py --local_dir ~/data/math
 #   python3 examples/data_preprocess/gsm8k.py --local_dir ~/data/gsm8k
-
+HOME=/mnt/bn/heheda/verl
 gsm8k_train_path=$HOME/data/gsm8k/train.parquet
 gsm8k_test_path=$HOME/data/gsm8k/test.parquet
-math_train_path=$HOME/data/math/train.parquet
-math_test_path=$HOME/data/math/test.parquet
+# math_train_path=$HOME/data/math/train.parquet
+# math_test_path=$HOME/data/math/test.parquet
 
-train_files="['$gsm8k_train_path', '$math_train_path']"
-test_files="['$gsm8k_test_path', '$math_test_path']"
+train_files="['$gsm8k_train_path']"
+test_files="['$gsm8k_test_path']"
 
 
 # prepare model ckpt
