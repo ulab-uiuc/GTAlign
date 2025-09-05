@@ -69,7 +69,6 @@ def extract_boxed_score(text: str) -> str:
     return number if match else 0
 
 def call_judge(solution_str, ground_truth, judge, extra_info):
-    ground_truth = extract_boxed_score(ground_truth)
     prompt = ACCURACY_PROMPT.format(problem=extra_info["single_turn_prompt"], ground_truth = ground_truth, completion=solution_str)
     for attempt in range(MAX_RETRIES):
         try:
@@ -78,7 +77,7 @@ def call_judge(solution_str, ground_truth, judge, extra_info):
                 messages=[
                         {"role": "user", "content": prompt},
                 ],
-                max_tokens=32768,
+                max_tokens=16384,
             )
             response = output.choices[0].message.content
             print("response: ", response)
@@ -117,39 +116,39 @@ def compute_score(solution_str, ground_truth, judge, extra_info):
         "judge_reward": judge_score,
         "cost_reward": 0.0
     }
-    return answer_reward + format_reward1
+    return (answer_reward + format_reward1) / 2
 
-def test():
-    client = OpenAI(
-        base_url=BASE_URL,
-        api_key=API_KEY,
-    )
-    out = compute_score("""<thinking>1+1=2</thinking><payoff>{
-"DQ_AQ": {
-"LLM": 4.1,
-"user": 3.5
-},
-"DQ_CQ": {
-"LLM": 3.6,
-"user": 2
-},
-"DQ_DA": {
-"LLM": 2.8,
-"user": 4.1
-},
-"VQ_AQ": {
-"LLM": 3,
-"user": 2.8
-},
-"VQ_CQ": {
-"LLM": 1,
-"user": 1.3
-},
-"VQ_DA": {
-"LLM": 1,
-"user": 1
-}
-}</payoff><analyze>1+1=2 is correct</analyze><response>1+1=\\boxed{2}</response>""", "\\boxed{2}", client, {"single_turn_prompt": "solve 1+1?"})
-    print(out)
+# def test():
+#     client = OpenAI(
+#         base_url=BASE_URL,
+#         api_key=API_KEY,
+#     )
+#     out = compute_score("""<thinking>1+1=2</thinking><payoff>{
+# "DQ_AQ": {
+# "LLM": 4.1,
+# "user": 3.5
+# },
+# "DQ_CQ": {
+# "LLM": 3.6,
+# "user": 2
+# },
+# "DQ_DA": {
+# "LLM": 2.8,
+# "user": 4.1
+# },
+# "VQ_AQ": {
+# "LLM": 3,
+# "user": 2.8
+# },
+# "VQ_CQ": {
+# "LLM": 1,
+# "user": 1.3
+# },
+# "VQ_DA": {
+# "LLM": 1,
+# "user": 1
+# }
+# }</payoff><analyze>1+1=2 is correct</analyze><response>1+1=\\boxed{2}</response>""", "\\boxed{2}", client, {"single_turn_prompt": "solve 1+1?"})
+#     print(out)
 
-test()
+# test()

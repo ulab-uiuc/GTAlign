@@ -26,7 +26,7 @@ from openai import OpenAI
 
 client = OpenAI(
     api_key="EMPTY",
-    base_url="http://[2605:340:cd51:4900:6e28:2bce:5eb:2f38]:36485/v1"
+    base_url="http://localhost:30003/v1"
 )
 
 resp = client.chat.completions.create(

@@ -36,6 +36,12 @@ from datasets import load_dataset
 
 import re, json, ast
 from datasets import concatenate_datasets
+from verl.utils.reward_score.math import last_boxed_only_string, remove_boxed
+
+
+def extract_solution(solution_str):
+    return remove_boxed(last_boxed_only_string(solution_str))
+
 
 INITIAL_CONTENT_PREFIX = (
     "The user's initial question is"
@@ -103,6 +109,8 @@ def groupwise_split(dataset, group_key="source", test_size=0.05, seed=42):
     grouped = {}
     for example in dataset:
         key = example[group_key]
+        if key == "math-hard":
+            continue
         grouped.setdefault(key, []).append(example)
 
     train_splits = []
@@ -130,7 +138,7 @@ def extract_nonoverlapping_prefix(a: str, b: str) -> str:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--local_dir", default="/mnt/bn/heheda/verl/data/gamellm0904")
+    parser.add_argument("--local_dir", default="/mnt/bn/heheda/verl/data/gamellm_medium")
     parser.add_argument("--hdfs_dir", default=None)
 
     args = parser.parse_args()
@@ -166,7 +174,9 @@ if __name__ == "__main__":
                 user_prompt = GAME_THEORY_USER_CONTENT_PREFIX.format(question=row["prompt"][-1]["content"])
             
             messages += [{"role": "user", "content": user_prompt}]
-
+            if row["source"] == "math-hard":
+                answer_raw = extract_solution(answer_raw)
+                print(f"answer_raw: {answer_raw}")
             data = {
                 "data_source": row["source"],
                 "prompt": messages,
