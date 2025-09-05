@@ -117,9 +117,8 @@ def load_reward_manager(
     reward_manager_name = config.reward_model.get("reward_manager", "naive")
     reward_manager_cls = get_reward_manager_cls(reward_manager_name)
     if reward_manager_name == "gamellm":
-        reward_manager_cls.judge_ip = config.reward_model.get("judge_ip", "localhost")
-        reward_manager_cls.judge_port = config.reward_model.get("judge_port", 30003)
-        reward_manager_cls.post_init()
+        judge_ip = config.reward_model.get("judge_ip", "localhost")
+        judge_port = config.reward_model.get("judge_port", 30003)
         
     # Try to get a custom reward function based on the configuration
     compute_score = get_custom_reward_fn(config)
@@ -143,6 +142,16 @@ def load_reward_manager(
             final_compute_score = default_compute_score
 
     # Instantiate and return the reward manager with the specified parameters
+    if reward_manager_name == "gamellm":
+        return reward_manager_cls(
+            tokenizer=tokenizer,
+            num_examine=num_examine,
+            compute_score=final_compute_score,
+            reward_fn_key=config.data.reward_fn_key,
+            judge_ip=judge_ip,
+            judge_port=judge_port,
+            **reward_kwargs,
+        )
     return reward_manager_cls(
         tokenizer=tokenizer,
         num_examine=num_examine,

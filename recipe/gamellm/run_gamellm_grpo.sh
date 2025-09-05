@@ -27,7 +27,7 @@
 # 需要在verl根目录运行
 set -x
 
-export SWANLAB_API_KEY=lEwCGfEJsM2C0hqvxlcuV
+# export SWANLAB_API_KEY=lEwCGfEJsM2C0hqvxlcuV
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
     data.train_files=/mnt/bn/heheda/verl/data/gamellm0904/train.parquet \
@@ -41,6 +41,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.optim.lr=1e-6 \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.actor.ppo_mini_batch_size=16 \
+    actor_rollout_ref.rollout.max_num_batched_tokens=65536 \
     actor_rollout_ref.actor.use_dynamic_bsz=True \
     actor_rollout_ref.actor.use_kl_loss=True \
     actor_rollout_ref.actor.kl_loss_coef=0.001 \
@@ -57,8 +58,8 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python3 -m verl.trainer.main_ppo \
     custom_reward_function.path=recipe/gamellm/reward_function.py \
     custom_reward_function.name=compute_score \
     trainer.critic_warmup=0 \
-    trainer.logger='["console","swanlab"]' \
-    trainer.project_name='verl_gamellm' \
+    trainer.logger='["console","wandb"]' \
+    trainer.project_name='siqi_verl_gamellm' \
     trainer.experiment_name='gamellm_grpo_0905_test0' \
     trainer.n_gpus_per_node=8 \
     trainer.val_before_train=True \
