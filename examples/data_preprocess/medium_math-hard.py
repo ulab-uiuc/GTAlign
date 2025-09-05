@@ -24,54 +24,160 @@ import datasets
 from verl.utils.hdfs_io import copy, makedirs
 
 
-def extract_solution(solution_str):
-    solution = re.search("#### (\\-?[0-9\\.\\,]+)", solution_str)
-    assert solution is not None
-    final_solution = solution.group(0)
-    final_solution = final_solution.split("#### ")[1].replace(",", "")
-    return final_solution
+from openai import OpenAI
+import re
+import json
+import re
+import json
+from rich.console import Console
+from rich.pretty import Pretty
+from rich.panel import Panel
+from datasets import load_dataset
 
+import re, json, ast
+from datasets import concatenate_datasets
+
+INITIAL_CONTENT_PREFIX = (
+    "The user's initial question is"
+    "Question: {question}"
+)
+
+SYSTEM_PROMPT = """
+The assistant is designed to be helpful, proactive, and highly interactive.
+
+The assistant strives to accurately interpret the user's intent throughout the conversation, acknowledging previous interactions to maintain context and continuity. If the user's message is unclear or lacks necessary details, the assistant always asks for clarification rather than making assumptions. For example, if the user's request is incomplete, the assistant responds with: "Could you provide more details so I can assist you better?"
+
+The assistant asks specific follow-up questions and offers suggestions based on the user's needs, avoiding vague or generic prompts. It proactively provides guidance and potential next steps, especially in complex tasks such as writing, analysis, coding, and question answering.
+
+The assistant is mindful of how much content the user needs to read or type, keeping interactions concise and efficient. It reduces unnecessary repetition and ensures responses are relevant, well-structured, and free from errors. When presenting options or asking for feedback, the assistant simplifies interactions by offering multiple-choice answers or specific suggestions to make it easier for the user to respond quickly.
+
+The assistant adapts its tone to align with the user's emotional state and style, adjusting its approach as needed. If uncertain about something, the assistant honestly says, "I don't know," and suggests ways for the user to find the information.
+
+The assistant provides factually accurate, coherent, and relevant responses, using proper grammar and structure. It remains interactive and proactive across all tasks, continually seeking feedback to refine and improve interactions.
+"""
+
+GAME_THEORY_USER_CONTENT_PREFIX = (
+    "Now you need to answer the user's most recent question. Always produce output in EXACTLY four tagged blocks, in this order: "
+    "<thinking>...</thinking><payoff>...</payoff><analyze>...</analyze><response>...</response>. "
+    "Do not include anything outside these tags. Do not use markdown, code fences, or extra commentary."
+
+    "Inside <thinking>...</thinking>: perform a concise game-theoretic analysis of strategy choices for this turn. "
+    "Consider three assistant strategies: DA = direct answer; CQ = clarifying question only; "
+    "AQ = answer + ONE targeted follow-up question. "
+    "Also classify the user's question type as either DQ = definite/clear or VQ = vague/ambiguous. "
+    "Discuss how each assistant strategy would impact both parties (LLM vs user) in terms of: "
+    "answer correctness risk, ambiguity resolution, user time/effort, token/compute cost, satisfaction, and likelihood of success. "
+    "Keep this analysis brief but concrete (2-5 sentences). No numbers here yet."
+
+    "Inside <payoff>...</payoff>: output a STRICT JSON object (no trailing commas, no comments) with EXACTLY these six keys: "
+    "{{\"DQ_AQ\", \"DQ_CQ\", \"DQ_DA\", \"VQ_AQ\", \"VQ_CQ\", \"VQ_DA\"}}. "
+    "Each key maps to an object with two float fields: {{\"LLM\": <float>, \"user\": <float>}}. "
+    "Use a consistent scale where higher is better; 0 = neutral; negatives allowed for costs; keep values roughly in [-5.0, 5.0]. "
+    "Numbers must have at most one decimal place and reflect your <thinking> analysis. Example shape (values are examples only): "
+    "{{ \"DQ_AQ\": {{ \"LLM\": 2.2, \"user\": 1.9 }}, \"DQ_CQ\": {{ \"LLM\": 3.1, \"user\": 3.5 }}, "
+    "\"DQ_DA\": {{ \"LLM\": 4.2, \"user\": 4.3 }}, \"VQ_AQ\": {{ \"LLM\": 2.0, \"user\": 2.1 }}, "
+    "\"VQ_CQ\": {{ \"LLM\": 1.3, \"user\": 1.2 }}, \"VQ_DA\": {{ \"LLM\": 2.0, \"user\": 1.8 }} }}."
+
+    "Inside <analyze>...</analyze>: derive the Pareto frontier from the six payoff points (treat each as (LLM, user)). "
+    "List the non-dominated pairs and briefly justify why dominated ones are excluded. "
+    "Then pick ONE recommended strategy using this tie-break: "
+    "1) maximize social welfare (LLM + user), 2) if tied, maximize user, 3) if still tied, maximize LLM. "
+    "Name the chosen key (e.g., DQ_DA) and justify in 1-3 sentences."
+
+    "Inside <response>...</response>: implement the chosen strategy for the user's actual question. "
+    "If you chose DA, give a concise, direct answer only. "
+    "If CQ, ask exactly ONE most-informative clarifying question (no answer yet). "
+    "If AQ, provide a brief, helpful answer AND exactly ONE focused follow-up question. "
+    "Do not mention payoffs or the analysis tags; just act accordingly here."
+
+    "Output policy: "
+    "- Absolutely no text outside the four tags. "
+    "- Keys and field names must match EXACTLY. "
+    "- Keep <thinking> short and non-redundant; keep <analyze> focused."
+
+    "Question: {question}"
+)
+
+
+def groupwise_split(dataset, group_key="source", test_size=0.05, seed=42):
+    grouped = {}
+    for example in dataset:
+        key = example[group_key]
+        grouped.setdefault(key, []).append(example)
+
+    train_splits = []
+    test_splits = []
+
+    for key, examples in grouped.items():
+        # 临时构建一个小 dataset
+        small_dataset = dataset.select([i for i, ex in enumerate(dataset) if ex[group_key] == key])
+        split = small_dataset.train_test_split(test_size=test_size, seed=seed)
+        train_splits.append(split["train"])
+        test_splits.append(split["test"])
+
+    # 合并所有组的train和test
+    train_dataset = concatenate_datasets(train_splits)
+    test_dataset = concatenate_datasets(test_splits)
+
+    return train_dataset, test_dataset
+
+prompt_template = GAME_THEORY_USER_CONTENT_PREFIX
+
+def extract_nonoverlapping_prefix(a: str, b: str) -> str:
+    if not a.endswith(b):
+        raise ValueError("b is not a suffix of a")
+    return a[:-len(b)] if len(b) > 0 else a
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--local_dir", default="~/data/gsm8k")
+    parser.add_argument("--local_dir", default="/mnt/bn/heheda/verl/data/gamellm0904")
     parser.add_argument("--hdfs_dir", default=None)
 
     args = parser.parse_args()
 
-    data_source = "openai/gsm8k"
+    data_source = "zsqzz/rl-mathhard-medium-merged-0902"
+    dataset = load_dataset(data_source)
 
-    dataset = datasets.load_dataset(data_source, "main")
+    # 原始数据只有 train
+    full_dataset = dataset["train"]
 
-    train_dataset = dataset["train"]
-    test_dataset = dataset["test"]
-
-    instruction_following = 'Let\'s think step by step and output the final answer after "####".'
+    # 手动划分 95% train / 5% test
+    train_dataset, test_dataset = groupwise_split(full_dataset, group_key="source", test_size=0.05)
 
     # add a row to each data item that represents a unique id
     def make_map_fn(split):
-        def process_fn(example, idx):
-            question_raw = example.pop("single_turn_prompt")
+        def process_fn(row, idx):
+            question_raw = row.pop("single_turn_prompt")
+            answer_raw = row.pop("single_turn_completion")
+            if row["source"] == "medium":
+                question_raw = extract_nonoverlapping_prefix(question_raw, answer_raw)
+            chat_history = "\n".join(
+                f"{m['role'].capitalize()}: {m['content']}" for i, m in enumerate(row["prompt"][:-1])
+            )
 
-            question = question_raw + " " + instruction_following
+            assert row["prompt"][-1]["role"] == "user"
+            messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-            answer_raw = example.pop("single_turn_completion")
-            solution = extract_solution(answer_raw)
+            user_prompt = None
+            if len(row["prompt"]) > 1:
+                user_prompt  = INITIAL_CONTENT_PREFIX.format(question=row["prompt"][0]["content"])
+                user_prompt += GAME_THEORY_USER_CONTENT_PREFIX.format(question=row["prompt"][-1]["content"])
+            else:
+                user_prompt = GAME_THEORY_USER_CONTENT_PREFIX.format(question=row["prompt"][-1]["content"])
+            
+            messages += [{"role": "user", "content": user_prompt}]
+
             data = {
-                "data_source": data_source,
-                "prompt": [
-                    {
-                        "role": "user",
-                        "content": question,
-                    }
-                ],
-                "ability": "math",
-                "reward_model": {"style": "rule", "ground_truth": solution},
+                "data_source": row["source"],
+                "prompt": messages,
+                "ability": row["source"],
+                "reward_model": {"style": "rule", "ground_truth": answer_raw},
                 "extra_info": {
                     "split": split,
-                    "index": idx,
-                    "answer": answer_raw,
-                    "question": question_raw,
+                    "index": row["unique_conv_id"],
+                    "chat_history": row["prompt"],
+                    "single_turn_completion": answer_raw,
+                    "single_turn_prompt": question_raw,
                 },
             }
             return data
