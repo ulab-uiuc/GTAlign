@@ -110,19 +110,16 @@ class GameLLMRewardManager(AbstractRewardManager):
         num_examine: int,
         compute_score: Optional[Callable] = None,
         reward_fn_key: str = "data_source",
-        user_url: str = "http://localhost:8000/v1",
-        judge_url: str = "http://localhost:8000/v1",
+        judge_ip: str = "localhost",
+        judge_port: str = "30003",
     ) -> None:
         self.tokenizer = tokenizer
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.compute_score = compute_score or default_compute_score
         self.reward_fn_key = reward_fn_key
-        self.user_url = user_url
-        self.judge_url = judge_url
-        # self.user_client = OpenAI(
-        #     api_key="EMPTY",
-        #     base_url=self.user_url,
-        # )
+        self.judge_ip = judge_ip
+        self.judge_port = judge_port
+        self.judge_url = f"http://[{self.judge_ip}]:{self.judge_port}/v1" # ipv6的ip需要用中括号括起来
         self.judge_client = OpenAI(
             api_key="EMPTY",
             base_url=self.judge_url,
@@ -149,8 +146,7 @@ class GameLLMRewardManager(AbstractRewardManager):
                 references=ground_truth,
                 tasks=data_sources,
                 extra_info=extra_info,
-                num_processes=64,
-                # user_client=self.user_client,
+                num_processes=256,
                 judge_client=self.judge_client,
             )
         except asyncio.TimeoutError:

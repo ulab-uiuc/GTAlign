@@ -23,6 +23,8 @@
 #   -H "Content-Type: application/json" \
 #   -d '{"model":"default","messages":[{"role":"user","content":"hello"}]}'
 
+
+# 需要在verl根目录运行
 set -x
 
 export SWANLAB_API_KEY=lEwCGfEJsM2C0hqvxlcuV
@@ -50,7 +52,8 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.rollout.n=4 \
     algorithm.use_kl_in_reward=False \
     reward_model.reward_manager=gamellm \
-    +'reward_model.judge_url=http://[2605:340:cd51:4900:514d:6685:7e57:86c4]:36485/v1' \
+    +reward_model.judge_ip=2605:340:cd51:4900:514d:6685:7e57:86c4 \
+    +reward_model.judge_port=36485 \
     custom_reward_function.path=recipe/gamellm/reward_function.py \
     custom_reward_function.name=compute_score \
     trainer.critic_warmup=0 \
