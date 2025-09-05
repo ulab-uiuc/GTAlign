@@ -119,7 +119,8 @@ def load_reward_manager(
     if reward_manager_name == "gamellm":
         reward_manager_cls.judge_ip = config.reward_model.get("judge_ip", "localhost")
         reward_manager_cls.judge_port = config.reward_model.get("judge_port", 30003)
-
+        reward_manager_cls.post_init()
+        
     # Try to get a custom reward function based on the configuration
     compute_score = get_custom_reward_fn(config)
     final_compute_score = compute_score

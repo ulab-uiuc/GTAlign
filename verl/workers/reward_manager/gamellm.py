@@ -119,6 +119,10 @@ class GameLLMRewardManager(AbstractRewardManager):
         self.reward_fn_key = reward_fn_key
         self.judge_ip = judge_ip
         self.judge_port = judge_port
+        self.judge_url = None
+        self.judge_client = None
+
+    def post_init(self):
         self.judge_url = f"http://[{self.judge_ip}]:{self.judge_port}/v1" # ipv6的ip需要用中括号括起来
         self.judge_client = OpenAI(
             api_key="EMPTY",
