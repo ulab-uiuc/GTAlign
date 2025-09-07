@@ -20,7 +20,7 @@ from nltk.translate.bleu_score import sentence_bleu
 from time import sleep
 import requests
 import re
-from recipe.gamellm.tasks.format import format_reward, extract_tag_block
+from recipe.gamellm.tasks.format import format_reward, extract_tag_block, response_reward_logistic, reasoning_penalty
 from openai import OpenAI
 
 BASE_URL = "http://localhost:30003/v1"
@@ -116,65 +116,36 @@ def call_judge(solution_str, ground_truth, judge, extra_info):
 def compute_score(solution_str, ground_truth, judge, extra_info):
     try:
         format_reward1 = format_reward([solution_str])[0]
+        ori_solution_str = solution_str
+        reasoning_str = solution_str.split("<response>")[0]
         solution_str = extract_tag_block(solution_str,"response")
     except:
         original_reward = {
+            "score": 0,
             "answer_reward": 0,
-            "format_reward": format_reward1,
-            "judge_reward": 0,
+            "format_reward": 0,
+            "user_reward": 0.0,
+            "llm_reward": 0.0,
             "cost_reward": 0
         }
-        return format_reward1
+        return original_reward
     bleu = sentence_bleu([ground_truth], solution_str)
     judge_score = call_judge(solution_str, ground_truth, judge, extra_info)
     normalized_judge_score = judge_score / 4
     normalized_judge_score = min(max(normalized_judge_score, 0.0), 1.0)
     answer_reward = max(bleu, float(normalized_judge_score))
+    user_reward = 0.6 * answer_reward + 0.2 * response_reward_logistic(solution_str, L_min=200, L_max=800, k=0.005) + 0.2 * reasoning_penalty(reasoning_str,scale=200)
+    llm_reward = 0.1 * format_reward1 + 0.7 * answer_reward + 0.2 * response_reward_logistic(ori_solution_str, L_min=300, L_max=2200, k=0.005)
+    score = (user_reward * llm_reward) ** 0.5
     original_reward = {
-        "answer_reward": answer_reward,
+        "score": score,
+        "answer_reward": normalized_judge_score,
         "format_reward": format_reward1,
-        "judge_reward": normalized_judge_score,
+        "user_reward": user_reward,
+        "llm_reward": llm_reward,
         "cost_reward": 0.0
     }
+
     print(f"format_reward1: {format_reward1}")
     print(f"answer_reward: {answer_reward}")
-    return (answer_reward + format_reward1) /2
-
-# def test(): 
-#     intent="please write an article about obesity on its harmful aspects, in 1000 words, format style."
-#     question="please write an article about obesity."
-#     ground_truth="""Obesity is a complex multifactorial disease that accumulated excess body fat leads to negative effects on health. Obesity continues to accelerate resulting in an unprecedented epidemic that shows no significant signs of slowing down any time soon. Raised body mass index (BMI) is a risk factor for noncommunicable diseases such as diabetes, cardiovascular diseases, and musculoskeletal disorders, resulting in dramatic decrease of life quality and expectancy. The main cause of obesity is long-term energy imbalance between consumed calories and expended calories. Here, we explore the biological mechanisms of obesity with the aim of providing actionable treatment strategies to achieve a healthy body weight from nature to nurture. This review summarizes the global trends in obesity with a special focus on the pathogenesis of obesity from genetic factors to epigenetic factors, from social environmental factors to microenvironment factors. Against this background, we discuss several possible intervention strategies to minimize BMI."""
-#     response="""<thinking>1+1=2</thinking><payoff>{
-#         "DQ_AQ": {
-#         "LLM": 4.1,
-#         "user": 3.5
-#         },
-#         "DQ_CQ": {
-#         "LLM": 3.6,
-#         "user": 2
-#         },
-#         "DQ_DA": {
-#         "LLM": 2.8,
-#         "user": 4.1
-#         },
-#         "VQ_AQ": {
-#         "LLM": 3,
-#         "user": 2.8
-#         },
-#         "VQ_CQ": {
-#         "LLM": 1,
-#         "user": 1.3
-#         },
-#         "VQ_DA": {
-#         "LLM": 1,
-#         "user": 1
-#         }
-#         }</payoff><analyze>1+1=2 is correct</analyze><response>Could you please provide more details about your prefered response length and format?</response>"""
-#     extra_info = {"prompt": [{"role": "user", "content": question}], "single_turn_prompt": intent}
-#     client = OpenAI(
-#         base_url=BASE_URL,
-#         api_key=API_KEY,
-#     )
-#     out = compute_score(judge=client, solution_str=response, ground_truth=ground_truth, extra_info=extra_info)
-#     print(out)
-# test()
+    return original_reward

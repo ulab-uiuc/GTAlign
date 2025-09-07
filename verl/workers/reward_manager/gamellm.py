@@ -85,6 +85,8 @@ async def parallel_compute_score_async(
             scores.append(0.0)
         elif isinstance(result, int | float | bool):
             scores.append(float(result))
+        elif isinstance(result, dict):
+            scores.append(result)
         else:
             scores.append(float(result[0]))
     return scores
@@ -154,14 +156,14 @@ class GameLLMRewardManager:
             )
         except asyncio.TimeoutError:
             print("[Timeout] Global reward scoring timed out. Setting all as 0.")
-            scores = [0.0 for _ in range(len(sequences_str))]
+            scores = [{"score":0.0} for _ in range(len(sequences_str))]
         except Exception as e:
             print(f"[Error] Unexpected error during scoring. Setting all as 0. {e}")
-            scores = [0.0 for _ in range(len(sequences_str))]
-        data.batch["acc"] = torch.tensor(scores, dtype=torch.float32, device=prompt_ids.device)
+            scores = [{"score":0.0} for _ in range(len(sequences_str))]
+        data.batch["acc"] = torch.tensor([s["score"] for s in scores], dtype=torch.float32, device=prompt_ids.device)
         return scores
 
-    def __call__(self, data: DataProto, return_dict: bool = False):
+    def __call__(self, data: DataProto, return_dict: bool = True):
         """We will expand this function gradually based on the available datasets"""
 
         # If there is rm score, we directly return rm score. Otherwise, we compute via rm_score_fn
@@ -185,7 +187,7 @@ class GameLLMRewardManager:
 
         for i in range(len(data)):
             data_source = data_sources[i]
-            reward_tensor[i, valid_response_length[i].item() - 1] = scores[i]
+            reward_tensor[i, valid_response_length[i].item() - 1] = scores[i]["score"]
 
             if data_source not in already_print_data_sources:
                 already_print_data_sources[data_source] = 0
@@ -195,6 +197,6 @@ class GameLLMRewardManager:
                 print(sequences_str)
 
         if return_dict:
-            return {"reward_tensor": reward_tensor}
+            return {"reward_tensor": reward_tensor, "reward_extra_info": scores}
         else:
             return reward_tensor

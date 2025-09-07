@@ -10,6 +10,7 @@ bash /mnt/bn/heheda/verl/recipe/gamellm/run_gamellm_ppo.sh
 
 # sgl node
 cat /etc/hosts
+2605:340:cd51:4900:89a6:f93f:15bd:2b51
 export CUDA_DEVICE_MAX_CONNECTIONS=1
 export NCCL_SOCKET_IFNAME=eth0
 export NCCL_IB_GID_INDEX=0

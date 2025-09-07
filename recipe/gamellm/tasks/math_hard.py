@@ -16,7 +16,7 @@ import json
 from nltk.translate.bleu_score import sentence_bleu
 from time import sleep
 import re
-from recipe.gamellm.tasks.format import format_reward, extract_tag_block
+from recipe.gamellm.tasks.format import format_reward, extract_tag_block, response_reward_logistic, reasoning_penalty
 from openai import OpenAI
 
 BASE_URL = "http://localhost:30003/v1"
@@ -97,58 +97,33 @@ def call_judge(solution_str, ground_truth, judge, extra_info):
 def compute_score(solution_str, ground_truth, judge, extra_info):
     try:
         format_reward1 = format_reward([solution_str])[0]
+        ori_solution_str = solution_str
+        reasoning_str = solution_str.split("<response>")[0]
         solution_str = extract_tag_block(solution_str,"response")
     except:
         original_reward = {
+            "score": 0,
             "answer_reward": 0,
-            "format_reward": format_reward1,
-            "judge_reward": 0,
+            "format_reward": 0,
+            "user_reward": 0.0,
+            "llm_reward": 0.0,
             "cost_reward": 0
         }
-        return format_reward1
+        return original_reward
     judge_score = call_judge(solution_str, ground_truth, judge, extra_info)
     answer_reward = float(judge_score)
-    answer_reward = min(max(answer_reward, 0), 1)
-    # cost_reward = 
+    answer_reward = max(0, min(1, answer_reward))
+    user_reward = 0.8 * answer_reward + 0.1 * response_reward_logistic(solution_str, L_min=50, L_max=1500, k=0.005) + 0.1 * reasoning_penalty(reasoning_str,scale=300)
+    llm_reward = 0.1 * format_reward1 + 0.7 * answer_reward + 0.1 * response_reward_logistic(ori_solution_str, L_min=300, L_max=2000, k=0.005)
+    score = (user_reward * llm_reward) ** 0.5
     original_reward = {
+        "score": score,
         "answer_reward": answer_reward,
         "format_reward": format_reward1,
-        "judge_reward": judge_score,
-        "cost_reward": 0.0
+        "user_reward": user_reward,
+        "llm_reward": llm_reward,
+        "cost_reward": 0
     }
-    return (answer_reward + format_reward1) / 2
-
-# def test():
-#     client = OpenAI(
-#         base_url=BASE_URL,
-#         api_key=API_KEY,
-#     )
-#     out = compute_score("""<thinking>1+1=2</thinking><payoff>{
-# "DQ_AQ": {
-# "LLM": 4.1,
-# "user": 3.5
-# },
-# "DQ_CQ": {
-# "LLM": 3.6,
-# "user": 2
-# },
-# "DQ_DA": {
-# "LLM": 2.8,
-# "user": 4.1
-# },
-# "VQ_AQ": {
-# "LLM": 3,
-# "user": 2.8
-# },
-# "VQ_CQ": {
-# "LLM": 1,
-# "user": 1.3
-# },
-# "VQ_DA": {
-# "LLM": 1,
-# "user": 1
-# }
-# }</payoff><analyze>1+1=2 is correct</analyze><response>1+1=\\boxed{2}</response>""", "\\boxed{2}", client, {"single_turn_prompt": "solve 1+1?"})
-#     print(out)
-
-# test()
+    print(f"format_reward1: {format_reward1}")
+    print(f"answer_reward: {answer_reward}")
+    return original_reward

@@ -19,12 +19,12 @@ def reward_func(data_source, solution_str, ground_truth, judge: None, extra_info
     elif data_source == "math-hard":
         from recipe.gamellm.tasks import math_hard
         return math_hard.compute_score(solution_str, ground_truth, judge, extra_info)
-    # elif data_source in ["safety"]:
-    #     from recipe.gamellm.tasks import safety
-    #     return safety.compute_score(solution_str, ground_truth, judge, extra_info)
-    # elif data_source in ["abgqa"]:
-    #     from recipe.gamellm.tasks import abgqa
-    #     return abgqa.compute_score(solution_str, ground_truth, judge, extra_info)
+    elif data_source in ["wildguard"]:
+        from recipe.gamellm.tasks import safety
+        return safety.compute_score(solution_str, ground_truth, judge, extra_info)
+    elif data_source in ["ambig_qa"]:
+        from recipe.gamellm.tasks import abgqa
+        return abgqa.compute_score(solution_str, ground_truth, judge, extra_info)
     else:
         raise NotImplementedError
 

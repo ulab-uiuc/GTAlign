@@ -79,6 +79,7 @@ python3 -m verl.trainer.main_ppo \
     trainer.project_name='siqi_verl_gamellm' \
     trainer.experiment_name='gamellm_ppo_0905_test1' \
     trainer.n_gpus_per_node=8 \
+    trainer.validation_data_dir='/mnt/bn/heheda/verl/exp0906_grpo' \
     trainer.val_before_train=False \
     trainer.nnodes=1 \
     trainer.save_freq=100 \
