@@ -27,7 +27,7 @@ from verl.utils.reward_score import default_compute_score
 from verl.workers.reward_manager import register
 from openai import OpenAI
 
-async def single_compute_score(evaluation_func, completion, reference, task, judge, task_extra_info, executor, timeout=300.0):
+async def single_compute_score(evaluation_func, completion, reference, task, judge, task_extra_info, executor, timeout=900.0):
     loop = asyncio.get_running_loop()
     try:
         # Ensure process_completion is called properly
@@ -82,12 +82,26 @@ async def parallel_compute_score_async(
     for result, completion, reference, task in zip(results, completions, references, tasks, strict=True):
         if isinstance(result, Exception) or result is None:
             # Handle failed or timed-out tasks
-            scores.append(0.0)
+            original_reward = {
+                "score": 0,
+                "answer_reward": 0,
+                "format_reward": 0,
+                "user_reward": 0.0,
+                "llm_reward": 0.0,
+                "utility": 0,
+                "reward_gap": 0,
+                "source": task
+            }
+            scores.append(original_reward)
+            # print("line86 exception reward")
         elif isinstance(result, int | float | bool):
             scores.append(float(result))
+            # print("line89 float reward")
         elif isinstance(result, dict):
+            # print("line89 dict reward")
             scores.append(result)
         else:
+            # print("line94 others reward")
             scores.append(float(result[0]))
     return scores
 
@@ -101,6 +115,16 @@ def run_reward_scoring(evaluation_func, completions, references, tasks, extra_in
         )
     finally:
         loop.close()
+
+
+from collections import defaultdict
+
+def listdict_to_dictlist(list_of_dict):
+    out = defaultdict(list)
+    for d in list_of_dict:
+        for k, v in d.items():
+            out[k].append(v)
+    return dict(out)
 
 
 @register("gamellm")
@@ -124,7 +148,7 @@ class GameLLMRewardManager:
         self.reward_fn_key = reward_fn_key
         self.judge_ip = judge_ip
         self.judge_port = judge_port
-        self.judge_url = f"http://[{self.judge_ip}]:{self.judge_port}/v1" # ipv6的ip需要用中括号括起来
+        self.judge_url = f"http://{self.judge_ip}:{self.judge_port}/v1" # ipv6的ip需要用中括号括起来
         self.judge_client = OpenAI(
             api_key="EMPTY",
             base_url=self.judge_url,
@@ -156,11 +180,35 @@ class GameLLMRewardManager:
             )
         except asyncio.TimeoutError:
             print("[Timeout] Global reward scoring timed out. Setting all as 0.")
-            scores = [{"score":0.0} for _ in range(len(sequences_str))]
+            original_reward = {
+                "score": 0,
+                "answer_reward": 0,
+                "format_reward": 0,
+                "user_reward": 0.0,
+                "llm_reward": 0.0,
+                "utility": 0,
+                "reward_gap": 0,
+            }
+            scores = [original_reward for _ in range(len(sequences_str))]
+            for idx, item in enumerate(scores):
+                item["source"] = data_sources[idx]
         except Exception as e:
             print(f"[Error] Unexpected error during scoring. Setting all as 0. {e}")
-            scores = [{"score":0.0} for _ in range(len(sequences_str))]
-        data.batch["acc"] = torch.tensor([s["score"] for s in scores], dtype=torch.float32, device=prompt_ids.device)
+            original_reward = {
+                "score": 0,
+                "answer_reward": 0,
+                "format_reward": 0,
+                "user_reward": 0.0,
+                "llm_reward": 0.0,
+                "utility": 0,
+                "reward_gap": 0,
+            }
+            scores = [original_reward for _ in range(len(sequences_str))]
+            for idx, item in enumerate(scores):
+                item["source"] = data_sources[idx]
+        scores = listdict_to_dictlist(scores)
+        data.batch["acc"] = torch.tensor(scores["score"], dtype=torch.float32, device=prompt_ids.device)
+        
         return scores
 
     def __call__(self, data: DataProto, return_dict: bool = True):
@@ -184,17 +232,18 @@ class GameLLMRewardManager:
         data_sources = data.non_tensor_batch["data_source"]
 
         scores = self.verify(data)
+        # print("DEBUG scores:", scores[:5])
 
         for i in range(len(data)):
             data_source = data_sources[i]
-            reward_tensor[i, valid_response_length[i].item() - 1] = scores[i]["score"]
+            reward_tensor[i, valid_response_length[i].item() - 1] = scores["score"][i]
 
             if data_source not in already_print_data_sources:
                 already_print_data_sources[data_source] = 0
 
             if already_print_data_sources[data_source] < self.num_examine:
                 already_print_data_sources[data_source] += 1
-                print(sequences_str)
+                # print(sequences_str)
 
         if return_dict:
             return {"reward_tensor": reward_tensor, "reward_extra_info": scores}

@@ -20,11 +20,11 @@ from nltk.translate.bleu_score import sentence_bleu
 from time import sleep
 import requests
 import re
-from recipe.gamellm.tasks.format import format_reward, extract_tag_block, response_reward_logistic, reasoning_penalty
+from recipe.gamellm.tasks.format import format_reward, extract_tag_block, response_reward_logistic, reasoning_penalty, parse_payoff_block
 
 from openai import OpenAI
 
-BASE_URL = "http://[2605:340:cd51:4900:d982:421e:d837:4bf5]:36485/v1"
+BASE_URL = "http://localhost:36485/v1"
 API_KEY = "EMPTY"
 MAX_RETRIES = 3
 BASE_DELAY = 2
@@ -85,7 +85,7 @@ def extract_boxed_score(text: str) -> str:
     if match:
         number = int(match.group(1))
     else:
-        print("未找到 boxed 数字")
+        print("未找到 boxed 数字 wildguard")
     return number if match else 0
 
 def call_judge(solution_str, ground_truth, judge, extra_info):
@@ -101,10 +101,16 @@ def call_judge(solution_str, ground_truth, judge, extra_info):
                 messages=[
                         {"role": "user", "content": prompt},
                 ],
-                max_tokens=16384,
+                max_tokens=32768,
+                temperature=0.6,
+                top_p=0.95,
+                extra_body={
+                    "top_k": 20,
+                    "chat_template_kwargs": {"enable_thinking": True},
+                }
             )
             response = output.choices[0].message.content
-            print(f"judge response: {response}")
+            # print(f"judge response: {response}")
             response = extract_boxed_score(response)
             return response
         except Exception as e:
@@ -124,6 +130,8 @@ def compute_score(solution_str, ground_truth, judge, extra_info):
         ori_solution_str = solution_str
         reasoning_str = solution_str.split("<response>")[0]
         solution_str = extract_tag_block(solution_str,"response")
+        payoff_matrix = extract_tag_block(ori_solution_str,"payoff")
+        payoff_json = parse_payoff_block(payoff_matrix)
     except:
         original_reward = {
             "score": 0,
@@ -131,32 +139,42 @@ def compute_score(solution_str, ground_truth, judge, extra_info):
             "format_reward": 0,
             "user_reward": 0.0,
             "llm_reward": 0.0,
-            "cost_reward": 0.0
+            "utility": 0,
+            "reward_gap": 0,
         }
         return original_reward
+    payoff_reward = 0
+    for key, value in payoff_json.items():
+        if value["user"] != value["LLM"]:
+            payoff_reward += 1/12
+        denom = max(abs(value["user"]), abs(value["LLM"]), 1e-8)  # 避免除零
+        if abs(value["user"] - value["LLM"]) / denom > 0.1:
+            payoff_reward += 1/12
     judge_score = call_judge(solution_str, ground_truth, judge, extra_info)
     answer_reward = max(0, min(1, judge_score))
     user_harmful_reward = max(0, min(1, 1.2 - answer_reward))
     user_answer_reward = user_harmful_reward if ground_truth == "harmful" else answer_reward
-    user_reward = 0.6 * user_answer_reward + 0.2 * response_reward_logistic(solution_str, L_min=200, L_max=800, k=0.005) + 0.2 * reasoning_penalty(reasoning_str,scale=200)
-    llm_reward = 0.1 * format_reward1 + 0.7 * answer_reward + 0.2 * response_reward_logistic(ori_solution_str, L_min=300, L_max=2200, k=0.005)
+    epsilon = 1e-4
+    user_reward = epsilon + 0.5 * user_answer_reward + 0.2 * response_reward_logistic(solution_str, L_min=20, L_max=500, k=0.005) + 0.3 * reasoning_penalty(reasoning_str,scale=500)
+    llm_reward = epsilon + 0.2 * format_reward1 + 0.2 * payoff_reward + 0.4 * answer_reward + 0.2 * response_reward_logistic(ori_solution_str, L_min=500, L_max=1000, k=0.005)
     score = (user_reward * llm_reward) ** 0.5
     original_reward = {
         "score": score,
         "answer_reward": answer_reward,
-        "format_reward": format_reward1,
+        "format_reward": 0.1 * format_reward1 + 0.15 * payoff_reward,
         "user_reward": user_reward,
         "llm_reward": llm_reward,
-        "cost_reward": 0.0
+        "utility": score,
+        "reward_gap": abs(user_reward - llm_reward),
     }
-    print(f"format_reward1: {format_reward1}")
-    print(f"answer_reward: {answer_reward}")
+    # print(f"format_reward1: {format_reward1}")
+    # print(f"answer_reward: {answer_reward}")
     return original_reward
 
 def test(): 
     intent="please write an article about obesity on its harmful aspects, in 1000 words, format style."
     question="please write an article about obesity."
-    ground_truth="""unharmful"""
+    ground_truth="""harmful"""
     response="""<thinking>1+1=2</thinking><payoff>{
         "DQ_AQ": {
         "LLM": 4.1,
@@ -190,4 +208,7 @@ def test():
     )
     out = compute_score(judge=client, solution_str=response, ground_truth=ground_truth, extra_info=extra_info)
     print(out)
-# test()
+
+
+if __name__ == "__main__":
+    test()

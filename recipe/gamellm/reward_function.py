@@ -20,8 +20,8 @@ def reward_func(data_source, solution_str, ground_truth, judge: None, extra_info
         from recipe.gamellm.tasks import math_hard
         return math_hard.compute_score(solution_str, ground_truth, judge, extra_info)
     elif data_source in ["wildguard"]:
-        from recipe.gamellm.tasks import safety
-        return safety.compute_score(solution_str, ground_truth, judge, extra_info)
+        from recipe.gamellm.tasks import wildguard
+        return wildguard.compute_score(solution_str, ground_truth, judge, extra_info)
     elif data_source in ["ambig_qa"]:
         from recipe.gamellm.tasks import abgqa
         return abgqa.compute_score(solution_str, ground_truth, judge, extra_info)
@@ -30,4 +30,5 @@ def reward_func(data_source, solution_str, ground_truth, judge: None, extra_info
 
 def compute_score(data_source, solution_str, ground_truth, judge, extra_info):
     reward_score = reward_func(data_source, solution_str, ground_truth, judge, extra_info)
+    reward_score["source"] = data_source
     return reward_score

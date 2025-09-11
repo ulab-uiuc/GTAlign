@@ -585,6 +585,7 @@ class RayPPOTrainer:
             reward_extra_infos_dict["reward"].extend(scores)
             print(f"len reward_extra_infos_dict['reward']: {len(reward_extra_infos_dict['reward'])}")
             if "reward_extra_info" in result:
+                # print(f"line 588 {scores=}, {result['reward_extra_info']=}")
                 for key, lst in result["reward_extra_info"].items():
                     reward_extra_infos_dict[key].extend(lst)
                     print(f"len reward_extra_infos_dict['{key}']: {len(reward_extra_infos_dict[key])}")
@@ -1080,6 +1081,7 @@ class RayPPOTrainer:
                         batch.batch["token_level_scores"] = reward_tensor
 
                         if reward_extra_infos_dict:
+                            # print("line1084 reward_extra_infos_dict", reward_extra_infos_dict)
                             batch.non_tensor_batch.update({k: np.array(v) for k, v in reward_extra_infos_dict.items()})
 
                         # compute rewards. apply_kl_penalty if available

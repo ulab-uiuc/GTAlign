@@ -86,7 +86,7 @@ def get_custom_reward_fn(config: DictConfig) -> Optional[RawRewardFn]:
     raw_fn = getattr(module, function_name)
 
     reward_kwargs = dict(reward_fn_config.get("reward_kwargs", {}))
-    print("line89 verl.trainer.ppo.reward.py get_custom_reward_fn", reward_kwargs)
+    # print("line89 verl.trainer.ppo.reward.py get_custom_reward_fn", reward_kwargs)
     return partial(_call_with_kwargs, raw_fn, reward_kwargs)
 
 

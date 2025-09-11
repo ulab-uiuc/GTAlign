@@ -8,9 +8,11 @@ cd /mnt/bn/heheda/verl
 conda activate verl
 bash /mnt/bn/heheda/verl/recipe/gamellm/run_gamellm_ppo.sh
 
+CUDA_VISIBLE_DEVICES=4,5,6,7 python3 -m sglang.launch_server --model-path /mnt/bn/heheda/HuggingFace-Download-Accelerator/hf_hub/models--Qwen--Qwen3-32B --mem-fraction-static 0.8 --port 36485 --tp 4 --dp 1 --reasoning-parser qwen3
+
 # sgl node
 cat /etc/hosts
-2605:340:cd51:4900:89a6:f93f:15bd:2b51
+2605:340:cd51:4900:7f7b:998f:86d0:a3b0
 export CUDA_DEVICE_MAX_CONNECTIONS=1
 export NCCL_SOCKET_IFNAME=eth0
 export NCCL_IB_GID_INDEX=0
@@ -19,4 +21,6 @@ export NCCL_NET_GDR_LEVEL=2
 export NCCL_IB_QPS_PER_CONNECTION=4
 export NCCL_IB_TC=160
 export NCCL_IB_TIMEOUT=22
-CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python3 -m sglang.launch_server --host '::' --model-path /mnt/bn/heheda/HuggingFace-Download-Accelerator/hf_hub/models--Qwen--Qwen3-32B --mem-fraction-static 0.8 --port 36485 --tp 2 --dp 4
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python3 -m sglang.launch_server --model-path /mnt/bn/heheda/HuggingFace-Download-Accelerator/hf_hub/models--Qwen--Qwen3-32B --mem-fraction-static 0.8 --port 36485 --tp 2 --dp 2
+
+CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server --model-path /mnt/bn/heheda/HuggingFace-Download-Accelerator/hf_hub/models--Qwen--Qwen3-4B --mem-fraction-static 0.8 --port 36485 --tp 1 --dp 1

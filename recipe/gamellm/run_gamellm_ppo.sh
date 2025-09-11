@@ -34,14 +34,14 @@ if [ "$rollout_mode" = "async" ]; then
     return_raw_chat="True"
 fi
 
-python3 -m verl.trainer.main_ppo \
+CUDA_VISIBLE_DEVICES=0,1,2,3 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=gae \
-    data.train_files=/mnt/bn/heheda/verl/data/gamellm0904/train.parquet \
-    data.val_files=/mnt/bn/heheda/verl/data/gamellm0904/test.parquet \
+    data.train_files=/mnt/bn/heheda/verl/data/gamellm_wildbreak_math_medium_abgqa/train.parquet \
+    data.val_files=/mnt/bn/heheda/verl/data/gamellm_wildbreak_math_medium_abgqa/test.parquet \
     data.return_raw_chat=$return_raw_chat \
     data.train_batch_size=128 \
     data.max_prompt_length=8192 \
-    data.max_response_length=16384 \
+    data.max_response_length=8192 \
     data.filter_overlong_prompts=True \
     data.truncation='error' \
     actor_rollout_ref.model.path=/mnt/bn/heheda/gamellm_new/outputs/sft/gamellm/thinking-full-parallel-test3/checkpoint-18 \
@@ -70,18 +70,18 @@ python3 -m verl.trainer.main_ppo \
     critic.model.fsdp_config.optimizer_offload=False \
     algorithm.use_kl_in_reward=False \
     reward_model.reward_manager=gamellm \
-    +reward_model.judge_ip=2605:340:cd51:4900:7a1e:998a:1f64:c59d \
+    +reward_model.judge_ip=localhost \
     +reward_model.judge_port=36485 \
     custom_reward_function.path=recipe/gamellm/reward_function.py \
     custom_reward_function.name=compute_score \
     trainer.critic_warmup=0 \
     trainer.logger='["console","wandb"]' \
     trainer.project_name='siqi_verl_gamellm' \
-    trainer.experiment_name='gamellm_ppo_0905_test1' \
-    trainer.n_gpus_per_node=8 \
-    trainer.validation_data_dir='/mnt/bn/heheda/verl/exp0906_grpo' \
-    trainer.val_before_train=False \
+    trainer.experiment_name='gamellm_ppo_0908_test1' \
+    trainer.n_gpus_per_node=4 \
+    trainer.validation_data_dir='/mnt/bn/heheda/verl/exp0908_ppo' \
+    trainer.val_before_train=True \
     trainer.nnodes=1 \
-    trainer.save_freq=100 \
-    trainer.test_freq=10 \
-    trainer.total_epochs=5 $@
+    trainer.save_freq=10 \
+    trainer.test_freq=5 \
+    trainer.total_epochs=30 $@
