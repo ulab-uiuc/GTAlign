@@ -137,7 +137,7 @@ def is_dominated(a, b, eps=1e-9):
     return ge_all and gt_any
 
 def pareto_frontier_from_json(json_str, eps=1e-9):
-    data = json.loads(json_str)
+    data = json_str
     # 将字典转成列表 [(name, (llm, user)), ...]
     items = [(k, (v["LLM"], v["user"])) for k, v in data.items()]
     frontier = []
@@ -150,9 +150,9 @@ def pareto_frontier_from_json(json_str, eps=1e-9):
                 dominated = True
                 break
         if not dominated:
-            frontier.append((name_i, pt_i))
-    # 常用：按 LLM 分数升序（或改 key=lambda x: x[1][1] 按 user 升序）
-    frontier.sort(key=lambda x: (x[1][0], x[1][1]))
+            frontier.append(name_i)
+    # # 常用：按 LLM 分数升序（或改 key=lambda x: x[1][1] 按 user 升序）
+    # frontier.sort(key=lambda x: (x[1][0], x[1][1]))
     return frontier
 
 def format_reward(completions, **kwargs):

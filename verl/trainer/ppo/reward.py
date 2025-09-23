@@ -116,9 +116,10 @@ def load_reward_manager(
     # By default reward_manager is set to naive (NaiveRewardManager)
     reward_manager_name = config.reward_model.get("reward_manager", "naive")
     reward_manager_cls = get_reward_manager_cls(reward_manager_name)
-    if reward_manager_name == "gamellm":
+    if reward_manager_name == "gamellm" or reward_manager_name == "gamellm_normalize":
         judge_ip = config.reward_model.get("judge_ip", "localhost")
         judge_port = config.reward_model.get("judge_port", 30003)
+        normalize_method = config.reward_model.get("normalize_method", "minmax")
         
     # Try to get a custom reward function based on the configuration
     compute_score = get_custom_reward_fn(config)
@@ -142,7 +143,7 @@ def load_reward_manager(
             final_compute_score = default_compute_score
 
     # Instantiate and return the reward manager with the specified parameters
-    if reward_manager_name == "gamellm":
+    if reward_manager_name == "gamellm": 
         return reward_manager_cls(
             tokenizer=tokenizer,
             num_examine=num_examine,
@@ -150,6 +151,17 @@ def load_reward_manager(
             reward_fn_key=config.data.reward_fn_key,
             judge_ip=judge_ip,
             judge_port=judge_port,
+            **reward_kwargs,
+        )
+    elif reward_manager_name == "gamellm_normalize":
+        return reward_manager_cls(
+            tokenizer=tokenizer,
+            num_examine=num_examine,
+            compute_score=final_compute_score,
+            reward_fn_key=config.data.reward_fn_key,
+            judge_ip=judge_ip,
+            judge_port=judge_port,
+            normalize_method=normalize_method,
             **reward_kwargs,
         )
     return reward_manager_cls(

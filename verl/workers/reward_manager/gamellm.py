@@ -26,8 +26,10 @@ from verl import DataProto
 from verl.utils.reward_score import default_compute_score
 from verl.workers.reward_manager import register
 from openai import OpenAI
+from collections import defaultdict
+import numpy as np
 
-async def single_compute_score(evaluation_func, completion, reference, task, judge, task_extra_info, executor, timeout=900.0):
+async def single_compute_score(evaluation_func, completion, reference, task, judge, task_extra_info, executor, timeout=9000.0):
     loop = asyncio.get_running_loop()
     try:
         # Ensure process_completion is called properly
@@ -86,6 +88,8 @@ async def parallel_compute_score_async(
                 "score": 0,
                 "answer_reward": 0,
                 "format_reward": 0,
+                "pareto_score": 0,
+                "payoff_reward": 0,
                 "user_reward": 0.0,
                 "llm_reward": 0.0,
                 "utility": 0,
@@ -148,7 +152,10 @@ class GameLLMRewardManager:
         self.reward_fn_key = reward_fn_key
         self.judge_ip = judge_ip
         self.judge_port = judge_port
-        self.judge_url = f"http://{self.judge_ip}:{self.judge_port}/v1" # ipv6的ip需要用中括号括起来
+        if self.judge_ip == "localhost":
+            self.judge_url = f"http://{self.judge_ip}:{self.judge_port}/v1" # ipv6的ip需要用中括号括起来
+        else:
+            self.judge_url = f"http://[{self.judge_ip}]:{self.judge_port}/v1" # ipv6的ip需要用中括号括起来
         self.judge_client = OpenAI(
             api_key="EMPTY",
             base_url=self.judge_url,
@@ -175,7 +182,7 @@ class GameLLMRewardManager:
                 references=ground_truth,
                 tasks=data_sources,
                 extra_info=extra_info,
-                num_processes=256,
+                num_processes=1024,
                 judge_client=self.judge_client,
             )
         except asyncio.TimeoutError:
@@ -184,11 +191,14 @@ class GameLLMRewardManager:
                 "score": 0,
                 "answer_reward": 0,
                 "format_reward": 0,
+                "pareto_score": 0,
+                "payoff_reward": 0,
                 "user_reward": 0.0,
                 "llm_reward": 0.0,
                 "utility": 0,
                 "reward_gap": 0,
             }
+            
             scores = [original_reward for _ in range(len(sequences_str))]
             for idx, item in enumerate(scores):
                 item["source"] = data_sources[idx]
@@ -198,6 +208,8 @@ class GameLLMRewardManager:
                 "score": 0,
                 "answer_reward": 0,
                 "format_reward": 0,
+                "pareto_score": 0,
+                "payoff_reward": 0,
                 "user_reward": 0.0,
                 "llm_reward": 0.0,
                 "utility": 0,
@@ -237,6 +249,182 @@ class GameLLMRewardManager:
         for i in range(len(data)):
             data_source = data_sources[i]
             reward_tensor[i, valid_response_length[i].item() - 1] = scores["score"][i]
+
+            if data_source not in already_print_data_sources:
+                already_print_data_sources[data_source] = 0
+
+            if already_print_data_sources[data_source] < self.num_examine:
+                already_print_data_sources[data_source] += 1
+                # print(sequences_str)
+
+        if return_dict:
+            return {"reward_tensor": reward_tensor, "reward_extra_info": scores}
+        else:
+            return reward_tensor
+
+
+
+
+@register("gamellm_normalize")
+class GameLLMRewardNormalizeManager:
+    """
+    The Reward Manager used in gamellm
+    """
+
+    def __init__(
+        self,
+        tokenizer: PreTrainedTokenizer,
+        num_examine: int,
+        compute_score: Optional[Callable] = None,
+        reward_fn_key: str = "data_source",
+        judge_ip: str = "localhost",
+        judge_port: str = "30003",
+        normalize_method: str = "minmax",
+    ) -> None:
+        self.tokenizer = tokenizer
+        self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
+        self.compute_score = compute_score or default_compute_score
+        self.reward_fn_key = reward_fn_key
+        self.judge_ip = judge_ip
+        self.judge_port = judge_port
+        self.normalize_method = normalize_method
+        if self.judge_ip == "localhost":
+            self.judge_url = f"http://{self.judge_ip}:{self.judge_port}/v1" # ipv6的ip需要用中括号括起来
+        else:
+            self.judge_url = f"http://[{self.judge_ip}]:{self.judge_port}/v1" # ipv6的ip需要用中括号括起来
+        self.judge_client = OpenAI(
+            api_key="EMPTY",
+            base_url=self.judge_url,
+        )
+        
+    def verify(self, data):
+        """
+        verify the batch and save as ``acc`` tensor
+        """
+        # batched scoring
+        prompt_ids = data.batch["prompts"]
+
+        response_ids = data.batch["responses"]
+        sequences_str = self.tokenizer.batch_decode(response_ids, skip_special_tokens=True)
+        ground_truth = [data_item.non_tensor_batch["reward_model"]["ground_truth"] for data_item in data]
+        data_sources = data.non_tensor_batch[self.reward_fn_key]
+        extra_info = data.non_tensor_batch.get("extra_info", None)
+
+        assert len(sequences_str) == len(ground_truth) == len(data_sources)
+        try:
+            scores = run_reward_scoring(
+                self.compute_score,
+                completions=sequences_str,
+                references=ground_truth,
+                tasks=data_sources,
+                extra_info=extra_info,
+                num_processes=1024,
+                judge_client=self.judge_client,
+            )
+        except asyncio.TimeoutError:
+            print("[Timeout] Global reward scoring timed out. Setting all as 0.")
+            original_reward = {
+                "score": 0,
+                "answer_reward": 0,
+                "format_reward": 0,
+                "pareto_score": 0,
+                "payoff_reward": 0,
+                "user_reward": 0.0,
+                "llm_reward": 0.0,
+                "utility": 0,
+                "reward_gap": 0,
+            }
+            
+            scores = [original_reward for _ in range(len(sequences_str))]
+            for idx, item in enumerate(scores):
+                item["source"] = data_sources[idx]
+        except Exception as e:
+            print(f"[Error] Unexpected error during scoring. Setting all as 0. {e}")
+            original_reward = {
+                "score": 0,
+                "answer_reward": 0,
+                "format_reward": 0,
+                "pareto_score": 0,
+                "payoff_reward": 0,
+                "user_reward": 0.0,
+                "llm_reward": 0.0,
+                "utility": 0,
+                "reward_gap": 0,
+            }
+            scores = [original_reward for _ in range(len(sequences_str))]
+            for idx, item in enumerate(scores):
+                item["source"] = data_sources[idx]
+        
+
+        ## normalize the scores
+        normalize_mode = self.normalize_method  # 可选: "zscore", "minmax", "none"
+
+        if normalize_mode != "none":
+            # 收集每个数据集的 score
+            grouped_scores = defaultdict(list)
+            for item in scores:
+                grouped_scores[item["source"]].append(item["score"])
+
+            stats = {}
+            if normalize_mode == "zscore":
+                # 均值方差归一化
+                for source, vals in grouped_scores.items():
+                    vals = np.array(vals, dtype=np.float32)
+                    mean = float(vals.mean())
+                    std = float(vals.std()) if vals.std() > 1e-6 else 1.0
+                    stats[source] = (mean, std)
+                # 应用
+                for item in scores:
+                    mean, std = stats[item["source"]]
+                    item["ppo_score"] = (item["score"] - mean) / std
+
+            elif normalize_mode == "minmax":
+                # 最小-最大归一化
+                for source, vals in grouped_scores.items():
+                    vals = np.array(vals, dtype=np.float32)
+                    vmin, vmax = float(vals.min()), float(vals.max())
+                    if abs(vmax - vmin) < 1e-6:
+                        stats[source] = (vmin, vmax, True)
+                    else:
+                        stats[source] = (vmin, vmax, False)
+                # 应用
+                for item in scores:
+                    vmin, vmax, is_const = stats[item["source"]]
+                    if is_const:
+                        item["ppo_score"] = 0.0
+                    else:
+                        item["ppo_score"] = (item["score"] - vmin) / (vmax - vmin)
+        scores = listdict_to_dictlist(scores)
+        data.batch["acc"] = torch.tensor(scores["ppo_score"], dtype=torch.float32, device=prompt_ids.device)
+        
+        return scores
+
+    def __call__(self, data: DataProto, return_dict: bool = True):
+        """We will expand this function gradually based on the available datasets"""
+
+        # If there is rm score, we directly return rm score. Otherwise, we compute via rm_score_fn
+        if "rm_scores" in data.batch.keys():
+            return data.batch["rm_scores"]
+
+        reward_tensor = torch.zeros_like(data.batch["responses"], dtype=torch.float32)
+
+        already_print_data_sources = {}
+
+        # batched scoring
+        prompt_ids = data.batch["prompts"]
+        prompt_length = prompt_ids.shape[-1]
+
+        response_ids = data.batch["responses"]
+        valid_response_length = data.batch["attention_mask"][:, prompt_length:].sum(dim=-1)
+        sequences_str = self.tokenizer.batch_decode(response_ids, skip_special_tokens=True)
+        data_sources = data.non_tensor_batch["data_source"]
+
+        scores = self.verify(data)
+        # print("DEBUG scores:", scores[:5])
+
+        for i in range(len(data)):
+            data_source = data_sources[i]
+            reward_tensor[i, valid_response_length[i].item() - 1] = scores["ppo_score"][i]
 
             if data_source not in already_print_data_sources:
                 already_print_data_sources[data_source] = 0

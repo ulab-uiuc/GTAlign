@@ -19,8 +19,8 @@ To merge FSDP checkpoints:
 ```sh
 python -m verl.model_merger merge \
     --backend fsdp \
-    --local_dir checkpoints/verl_fsdp_gsm8k_examples/qwen2_5_0b5_fsdp_saveload/global_step_1/actor \
-    --target_dir /path/to/merged_hf_model
+    --local_dir /mnt/bn/heheda/verl/checkpoints/siqi_verl_gamellm/0910_abgqa_cobb/global_step_140/actor \
+    --target_dir /mnt/bn/heheda/verl/checkpoints/siqi_verl_gamellm/0910_abgqa_cobb/global_step_140/actor_merged
 ```
 
 To merge Megatron checkpoints:

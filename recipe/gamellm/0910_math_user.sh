@@ -84,4 +84,5 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python3 -m verl.trainer.main_ppo \
     trainer.nnodes=1 \
     trainer.save_freq=10 \
     trainer.test_freq=5 \
+    trainer.resume_mode=auto \
     trainer.total_epochs=30 $@

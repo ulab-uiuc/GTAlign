@@ -200,3 +200,4 @@ def test():
 
 if __name__ == "__main__":
     test()
+    # print(AMBIGUITY_PROMPT.format(question="haha", ambiguity="non-ambiguous", completion="hdhwd", haha="hah"))
