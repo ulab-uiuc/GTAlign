@@ -8,9 +8,7 @@
 
 ## Models
 
-We have released five model checkpoints trained on four datasets.
-
-[View Models](https://huggingface.co/GTAlign/models)
+We have released five model checkpoints.
 
 | Model Name | Size | Dataset | Hugging Face Link |
 |------------|------|--------|--------------------|
