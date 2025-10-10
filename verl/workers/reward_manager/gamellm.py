@@ -264,6 +264,24 @@ class GameLLMRewardManager:
 
 
 
+from collections import defaultdict
+import numpy as np
+
+def robust_z(item_scores_by_src, clip_q=(0.01, 0.99), k=5.0):
+    stats = {}
+    for src, vals in item_scores_by_src.items():
+        vals = np.asarray(vals, dtype=np.float32)
+        # winsorize
+        lo, hi = np.quantile(vals, clip_q[0]), np.quantile(vals, clip_q[1])
+        vals_w = np.clip(vals, lo, hi)
+        med = float(np.median(vals_w))
+        mad = float(np.median(np.abs(vals_w - med))) * 1.4826
+        if mad < 1e-6: mad = 1.0
+        stats[src] = (med, mad, lo, hi)
+    return stats
+
+
+
 
 @register("gamellm_normalize")
 class GameLLMRewardNormalizeManager:
@@ -367,19 +385,18 @@ class GameLLMRewardNormalizeManager:
 
             stats = {}
             if normalize_mode == "zscore":
-                # 均值方差归一化
                 for source, vals in grouped_scores.items():
                     vals = np.array(vals, dtype=np.float32)
                     mean = float(vals.mean())
                     std = float(vals.std()) if vals.std() > 1e-6 else 1.0
                     stats[source] = (mean, std)
-                # 应用
+
+                epsilon = 1e-6
                 for item in scores:
                     mean, std = stats[item["source"]]
-                    item["ppo_score"] = (item["score"] - mean) / std
+                    item["ppo_score"] = (item["score"] - mean) / (std + epsilon)
 
             elif normalize_mode == "minmax":
-                # 最小-最大归一化
                 for source, vals in grouped_scores.items():
                     vals = np.array(vals, dtype=np.float32)
                     vmin, vmax = float(vals.min()), float(vals.max())
@@ -387,13 +404,94 @@ class GameLLMRewardNormalizeManager:
                         stats[source] = (vmin, vmax, True)
                     else:
                         stats[source] = (vmin, vmax, False)
-                # 应用
                 for item in scores:
                     vmin, vmax, is_const = stats[item["source"]]
                     if is_const:
                         item["ppo_score"] = 0.0
                     else:
                         item["ppo_score"] = (item["score"] - vmin) / (vmax - vmin)
+            elif normalize_mode == "robustz":
+                import numpy as np
+                stats = robust_z(grouped_scores)
+                for it in scores:
+                    med, mad, lo, hi = stats[it["source"]]
+                    x = np.clip(it["score"], lo, hi)
+                    z = (x - med) / mad
+                    it["ppo_score"] = float(np.tanh(z / 2.0))
+            elif normalize_mode == "cdf":
+                import numpy as np
+                import scipy.stats as st
+
+                rank_maps = {}
+                for src, vals in grouped_scores.items():
+                    vals = np.asarray(vals, dtype=np.float32)
+                    ranks = st.rankdata(vals, method="average")
+                    p = (ranks - 0.5) / len(vals)
+                    order = np.argsort(vals)
+                    rank_maps[src] = (vals[order], p[order])
+
+                def value_to_p(src, x):
+                    xs, ps = rank_maps[src]
+                    return float(np.interp(x, xs, ps, left=ps[0], right=ps[-1]))
+
+                for it in scores:
+                    p = value_to_p(it["source"], it["score"])
+                    it["ppo_score"] = 2.0 * p - 1.0
+            elif normalize_mode == "quantile":
+                import numpy as np
+                all_vals = np.asarray([it["score"] for it in scores], dtype=np.float32)
+                all_vals.sort()
+                def F_global_inv(p):
+                    idx = int(np.clip(p, 1e-6, 1-1e-6) * (len(all_vals)-1))
+                    return float(all_vals[idx])
+
+                cdf_maps = {}
+                for src, vals in grouped_scores.items():
+                    xs = np.sort(np.asarray(vals, dtype=np.float32))
+                    ps = (np.arange(len(xs)) + 0.5) / len(xs)
+                    cdf_maps[src] = (xs, ps)
+
+                def Fg(x, src):
+                    xs, ps = cdf_maps[src]
+                    return float(np.interp(x, xs, ps, left=ps[0], right=ps[-1]))
+
+                for it in scores:
+                    p = Fg(it["score"], it["source"])
+                    it["ppo_score"] = F_global_inv(p)  # 也可以改成 st.norm.ppf(p)
+            elif normalize_mode == "james":
+                import numpy as np
+                all_vals = np.asarray([it["score"] for it in scores], dtype=np.float32)
+                mu_glob, std_glob = float(all_vals.mean()), float(all_vals.std() + 1e-6)
+
+                kappa = 50  # 超参，可根据 batch 总量调
+                stats = {}
+                for src, vals in grouped_scores.items():
+                    vals = np.asarray(vals, dtype=np.float32)
+                    n = len(vals)
+                    mu, sd = float(vals.mean()), float(vals.std() + 1e-6)
+                    lam = n / (n + kappa)
+                    mu_s = lam * mu + (1 - lam) * mu_glob
+                    sd_s = np.sqrt(lam * (sd**2) + (1 - lam) * (std_glob**2))
+                    stats[src] = (mu_s, sd_s)
+
+                for it in scores:
+                    mu_s, sd_s = stats[it["source"]]
+                    it["ppo_score"] = (it["score"] - mu_s) / (sd_s + 1e-6)
+            elif normalize_mode == "decentralize":
+                import numpy as np
+                mu_by_src = {s: float(np.mean(v)) for s, v in grouped_scores.items()}
+                all_vals = np.asarray([it["score"] for it in scores], dtype=np.float32)
+                std_glob = float(all_vals.std() + 1e-6)
+
+                for it in scores:
+                    it["ppo_score"] = (it["score"] - mu_by_src[it["source"]]) / std_glob
+            elif normalize_mode == "selfadapt":
+                import numpy as np
+                tau = 2.0
+                mu_by_src = {s: float(np.mean(v)) for s, v in grouped_scores.items()}
+                for it in scores:
+                    it["ppo_score"] = float(np.tanh((it["score"] - mu_by_src[it["source"]]) / tau))
+
         scores = listdict_to_dictlist(scores)
         data.batch["acc"] = torch.tensor(scores["ppo_score"], dtype=torch.float32, device=prompt_ids.device)
         

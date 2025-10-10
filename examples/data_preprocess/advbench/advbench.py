@@ -10,7 +10,7 @@ HF_USERNAME = "zsqzz"
 NEW_DATASET_NAME = "advbench"
 SOURCE_DATASET = "walledai/AdvBench"
 NEW_DATASET_REPO_ID = f"{HF_USERNAME}/{NEW_DATASET_NAME}"
-LOCAL_PARQUET_PATH = "/mnt/bn/heheda/verl/data/advbench/test.parquet"
+LOCAL_PARQUET_PATH = "verl/data/advbench/test.parquet"
 
 
 # --- 2. 下载源数据集 ---

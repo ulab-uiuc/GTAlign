@@ -23,31 +23,31 @@ from pareto_ratio import load_jsonl, compute_metrics
 
 # ---------------------- CONFIG ----------------------
 # METHODS = {
-#     "cobb-douglas": "/mnt/bn/heheda/verl/0910_math_cobb/125.jsonl",
-#     "user":         "/mnt/bn/heheda/verl/0910_math_user/125.jsonl",
-#     "llm":          "/mnt/bn/heheda/verl/0910_math_llm/125.jsonl",
-#     "linear":       "/mnt/bn/heheda/verl/0910_math_linear/125.jsonl",
+#     "cobb-douglas": "verl/0910_math_cobb/125.jsonl",
+#     "user":         "verl/0910_math_user/125.jsonl",
+#     "llm":          "verl/0910_math_llm/125.jsonl",
+#     "linear":       "verl/0910_math_linear/125.jsonl",
 # }
 
 METHODS = {
-    "cobb-douglas": "/mnt/bn/heheda/verl/0911_wildguard_cobb/35.jsonl",
-    "user":         "/mnt/bn/heheda/verl/0911_wildguard_user/35.jsonl",
-    "llm":          "/mnt/bn/heheda/verl/0911_wildguard_llm/35.jsonl",
-    "linear":       "/mnt/bn/heheda/verl/0911_wildguard_linear/35.jsonl",
+    "cobb-douglas": "verl/0911_wildguard_cobb/35.jsonl",
+    "user":         "verl/0911_wildguard_user/35.jsonl",
+    "llm":          "verl/0911_wildguard_llm/35.jsonl",
+    "linear":       "verl/0911_wildguard_linear/35.jsonl",
 }
 
 # METHODS = {
-#     "cobb-douglas": "/mnt/bn/heheda/verl/0910_medium_cobb/85.jsonl",
-#     "user":         "/mnt/bn/heheda/verl/0910_medium_user/85.jsonl",
-#     "llm":          "/mnt/bn/heheda/verl/0910_medium_llm/85.jsonl",
-#     "linear":       "/mnt/bn/heheda/verl/0910_medium_linear/85.jsonl",
+#     "cobb-douglas": "verl/0910_medium_cobb/85.jsonl",
+#     "user":         "verl/0910_medium_user/85.jsonl",
+#     "llm":          "verl/0910_medium_llm/85.jsonl",
+#     "linear":       "verl/0910_medium_linear/85.jsonl",
 # }
 
 # METHODS = {
-#     "cobb-douglas": "/mnt/bn/heheda/verl/0910_wildguard_cobb/130.jsonl",
-#     "user":         "/mnt/bn/heheda/verl/0910_wildguard_user/130.jsonl",
-#     "llm":          "/mnt/bn/heheda/verl/0910_wildguard_llm/130.jsonl",
-#     "linear":       "/mnt/bn/heheda/verl/0910_wildguard_linear/130.jsonl",
+#     "cobb-douglas": "verl/0910_wildguard_cobb/130.jsonl",
+#     "user":         "verl/0910_wildguard_user/130.jsonl",
+#     "llm":          "verl/0910_wildguard_llm/130.jsonl",
+#     "linear":       "verl/0910_wildguard_linear/130.jsonl",
 # }
 
 OPPONENTS = ["user", "llm", "linear"]  # 横轴顺序

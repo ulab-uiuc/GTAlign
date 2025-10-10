@@ -8,14 +8,14 @@ set -x
 
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
-    data.train_files=/mnt/bn/heheda/verl/data/gamellm/train.parquet \
-    data.val_files=/mnt/bn/heheda/verl/data/gamellm/test.parquet \
+    data.train_files=verl/data/gamellm/train.parquet \
+    data.val_files=verl/data/gamellm/test.parquet \
     data.train_batch_size=256 \
     data.max_prompt_length=8192 \
     data.max_response_length=8192 \
     data.filter_overlong_prompts=True \
     data.truncation='error' \
-    actor_rollout_ref.model.path=/mnt/bn/heheda/gamellm_new/outputs/sft/gamellm/thinking-full-parallel-test3/checkpoint-18 \
+    actor_rollout_ref.model.path=gamellm_new/outputs/sft/gamellm/thinking-full-parallel-test3/checkpoint-18 \
     actor_rollout_ref.actor.optim.lr=1e-6 \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.actor.ppo_mini_batch_size=64 \

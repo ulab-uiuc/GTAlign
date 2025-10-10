@@ -3,7 +3,7 @@ import pandas as pd
 
 # 读取 JSON 文件
 data = []
-with open("/mnt/bn/heheda/verl/0910_medium_cobb/100.jsonl", "r") as f:
+with open("verl/0910_medium_cobb/100.jsonl", "r") as f:
     for line in f:
         data.append(json.loads(line.strip()))
 

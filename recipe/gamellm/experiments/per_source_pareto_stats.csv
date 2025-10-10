@@ -1,5 +1,0 @@
-source,total,ours_dominates,baseline_dominates,equal,incomparable
-ambig_qa,300,40,62,0,198
-math-hard,337,113,110,20,94
-medium,227,97,84,0,46
-wildguard,298,75,92,1,130

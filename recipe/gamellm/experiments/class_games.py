@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 
 # File paths and reward columns mapping
 files = [
-    "/mnt/bn/heheda/verl/recipe/gamellm/experiments/class_games/Signaling-generalization-2025-9-11_13_27_49.csv",
-    "/mnt/bn/heheda/verl/recipe/gamellm/experiments/class_games/Signaling-generalization-2025-9-11_13_27_57.csv",
-    "/mnt/bn/heheda/verl/recipe/gamellm/experiments/class_games/Signaling-generalization-2025-9-11_13_28_31.csv",
-    "/mnt/bn/heheda/verl/recipe/gamellm/experiments/class_games/Signaling-generalization-2025-9-11_13_28_43.csv"
+    "verl/recipe/gamellm/experiments/class_games/Signaling-generalization-2025-9-11_13_27_49.csv",
+    "verl/recipe/gamellm/experiments/class_games/Signaling-generalization-2025-9-11_13_27_57.csv",
+    "verl/recipe/gamellm/experiments/class_games/Signaling-generalization-2025-9-11_13_28_31.csv",
+    "verl/recipe/gamellm/experiments/class_games/Signaling-generalization-2025-9-11_13_28_43.csv"
 ]
 
 reward_columns = {
@@ -47,7 +47,7 @@ for ax, file, title, reward_col in zip(axes, selected_files, titles, selected_re
 # plt.suptitle("Step vs Reward (Three Selected Games, Individually Centered Y-axis)", fontsize=16)
 plt.tight_layout(rect=[0, 0, 1, 0.95])
 plt.show()
-plt.savefig("/mnt/bn/heheda/verl/recipe/gamellm/experiments/step_vs_reward_three_games_centered.png")
+plt.savefig("verl/recipe/gamellm/experiments/step_vs_reward_three_games_centered.png")
 
 # --------- Overlay 图，保持各自居中 ---------
 plt.figure(figsize=(8, 5))
@@ -68,4 +68,4 @@ plt.ylabel("Reward")
 plt.legend()
 plt.grid(False)
 plt.show()
-plt.savefig("/mnt/bn/heheda/verl/recipe/gamellm/experiments/step_vs_reward_three_games_overlay_centered.png")
+plt.savefig("verl/recipe/gamellm/experiments/step_vs_reward_three_games_overlay_centered.png")

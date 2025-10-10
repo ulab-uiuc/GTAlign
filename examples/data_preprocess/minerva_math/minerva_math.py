@@ -10,7 +10,7 @@ HF_USERNAME = "zsqzz"
 NEW_DATASET_NAME = "minervamath"
 SOURCE_DATASET = "math-ai/minervamath"
 NEW_DATASET_REPO_ID = f"{HF_USERNAME}/{NEW_DATASET_NAME}"
-LOCAL_PARQUET_PATH = "/mnt/bn/heheda/verl/data/minerva_math/test.parquet"
+LOCAL_PARQUET_PATH = "verl/data/minerva_math/test.parquet"
 
 
 # --- 2. 下载源数据集 ---

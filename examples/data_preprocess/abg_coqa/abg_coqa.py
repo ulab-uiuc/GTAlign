@@ -1,7 +1,7 @@
 """
-python /mnt/bn/heheda/verl/examples/data_preprocess/abg_coqa/abg_coqa.py \
-  --input "/mnt/bn/heheda/verl/examples/data_preprocess/abg_coqa/coqa_abg_test.json" \
-  --out_jsonl "/mnt/bn/heheda/verl/examples/data_preprocess/abg_coqa/converted" \
+python verl/examples/data_preprocess/abg_coqa/abg_coqa.py \
+  --input "verl/examples/data_preprocess/abg_coqa/coqa_abg_test.json" \
+  --out_jsonl "verl/examples/data_preprocess/abg_coqa/converted" \
   --repo_id "zsqzz/coqa-abg-chat" \
   --split "test" \
   --private        # 如果想创建私有仓库就加上这个开关

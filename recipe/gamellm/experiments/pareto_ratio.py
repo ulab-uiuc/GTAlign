@@ -353,8 +353,8 @@ def load_jsonl(path: str) -> List[Dict]:
 
 if __name__ == "__main__":
     # ==== 修改为你的文件路径 ====
-    path1 = '/mnt/bn/heheda/verl/0910_wildguard_cobb/140.jsonl'  # 方法1
-    path2 = '/mnt/bn/heheda/verl/0910_wildguard_llm/140.jsonl'    # 方法2
+    path1 = 'verl/0910_wildguard_cobb/140.jsonl'  # 方法1
+    path2 = 'verl/0910_wildguard_llm/140.jsonl'    # 方法2
 
     json1 = load_jsonl(path1)
     json2 = load_jsonl(path2)

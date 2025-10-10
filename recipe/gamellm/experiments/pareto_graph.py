@@ -297,8 +297,8 @@ def compare_by_source(records1, records2,
 
 # -------- 示例用法 --------
 if __name__ == "__main__":
-    json1_path = '/mnt/bn/heheda/verl/ppo_0909_bs1024/21.jsonl'  # 我们的方法
-    json2_path = '/mnt/bn/heheda/verl/ppo_0909_bs1024_linear_comb/21.jsonl'                      # 基线
+    json1_path = 'verl/ppo_0909_bs1024/21.jsonl'  # 我们的方法
+    json2_path = 'verl/ppo_0909_bs1024_linear_comb/21.jsonl'                      # 基线
 
     json1 = []
     with open(json1_path, 'r') as f:
@@ -320,7 +320,7 @@ if __name__ == "__main__":
     #     reward_keys=('user_reward', 'llm_reward'),
     #     title1="Ours",
     #     title2="Baseline",
-    #     save_dir="/mnt/bn/heheda/verl/recipe/gamellm/experiments",   # 例如 "plots/source_figs"
+    #     save_dir="verl/recipe/gamellm/experiments",   # 例如 "plots/source_figs"
     #     show=True
     # )
     stats = compare_by_source(
@@ -328,5 +328,5 @@ if __name__ == "__main__":
         key_field="input",
         reward_keys=('user_reward','llm_reward'),
         source_field="source",
-        csv_path="/mnt/bn/heheda/verl/recipe/gamellm/experiments/per_source_pareto_stats.csv"  # 可选
+        csv_path="verl/recipe/gamellm/experiments/per_source_pareto_stats.csv"  # 可选
     )

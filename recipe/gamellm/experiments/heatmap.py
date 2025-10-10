@@ -14,10 +14,10 @@ from pareto_ratio import load_jsonl, compute_metrics  # 若你的文件名是 pa
 
 # ---------------------- CONFIG ----------------------
 METHODS = {
-    "cobb-douglas": "/mnt/bn/heheda/verl/0910_wildguard_cobb/140.jsonl",
-    "linear":       "/mnt/bn/heheda/verl/0910_wildguard_linear/140.jsonl",
-    "user":         "/mnt/bn/heheda/verl/0910_wildguard_user/140.jsonl",
-    "llm":          "/mnt/bn/heheda/verl/0910_wildguard_llm/140.jsonl",
+    "cobb-douglas": "verl/0910_wildguard_cobb/140.jsonl",
+    "linear":       "verl/0910_wildguard_linear/140.jsonl",
+    "user":         "verl/0910_wildguard_user/140.jsonl",
+    "llm":          "verl/0910_wildguard_llm/140.jsonl",
 }
 
 EPSILON = 0.0

@@ -138,7 +138,7 @@ def extract_nonoverlapping_prefix(a: str, b: str) -> str:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--local_dir", default="/mnt/bn/heheda/verl/data/gamellm_medium")
+    parser.add_argument("--local_dir", default="verl/data/gamellm_medium")
     parser.add_argument("--hdfs_dir", default=None)
 
     args = parser.parse_args()

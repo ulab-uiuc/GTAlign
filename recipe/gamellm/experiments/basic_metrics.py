@@ -25,54 +25,54 @@ from recipe.gamellm.tasks.format import format_reward, extract_tag_block, respon
 
 # ---------------------- CONFIG ----------------------
 # METHODS = {
-#     "cobb-douglas": "/mnt/bn/heheda/verl/0910_math_cobb/125.jsonl",
+#     "cobb-douglas": "verl/0910_math_cobb/125.jsonl",
 # }
 
 METHODS = {
     "wildguard": {
-    # "cobb-douglas": "/mnt/bn/heheda/verl/0911_wildguard_cobb/150.jsonl",
-    # "linear": "/mnt/bn/heheda/verl/0910_wildguard_linear/140.jsonl",
-    "user": "/mnt/bn/heheda/verl/0911_wildguard_user/30.jsonl",
-    # "llm": "/mnt/bn/heheda/verl/0910_wildguard_llm/140.jsonl",
-    # "sft": "/mnt/bn/heheda/verl/0912_total_sft/0.jsonl",
-    # "qwen32b": "/mnt/bn/heheda/verl/0911_total_qwen32b/0.jsonl",
-    # "base": "/mnt/bn/heheda/verl/0910_total_base/0.jsonl",
+    # "cobb-douglas": "verl/0911_wildguard_cobb/150.jsonl",
+    # "linear": "verl/0910_wildguard_linear/140.jsonl",
+    "user": "verl/0911_wildguard_user/30.jsonl",
+    # "llm": "verl/0910_wildguard_llm/140.jsonl",
+    # "sft": "verl/0912_total_sft/0.jsonl",
+    # "qwen32b": "verl/0911_total_qwen32b/0.jsonl",
+    # "base": "verl/0910_total_base/0.jsonl",
     },
     "medium": {
-    # "cobb-douglas": "/mnt/bn/heheda/verl/0910_medium_cobb/85.jsonl",
-    # "linear": "/mnt/bn/heheda/verl/0910_medium_linear/85.jsonl",
-    "user": "/mnt/bn/heheda/verl/0910_medium_user/85.jsonl",
-    # "llm": "/mnt/bn/heheda/verl/0910_medium_llm/85.jsonl",
-    # "sft": "/mnt/bn/heheda/verl/0912_total_sft/0.jsonl",
-    # "qwen32b": "/mnt/bn/heheda/verl/0911_total_qwen32b/0.jsonl",
-    # "base": "/mnt/bn/heheda/verl/0910_total_base/0.jsonl",
+    # "cobb-douglas": "verl/0910_medium_cobb/85.jsonl",
+    # "linear": "verl/0910_medium_linear/85.jsonl",
+    "user": "verl/0910_medium_user/85.jsonl",
+    # "llm": "verl/0910_medium_llm/85.jsonl",
+    # "sft": "verl/0912_total_sft/0.jsonl",
+    # "qwen32b": "verl/0911_total_qwen32b/0.jsonl",
+    # "base": "verl/0910_total_base/0.jsonl",
     },
     "math-hard": {
-    # "cobb-douglas": "/mnt/bn/heheda/verl/0910_math_cobb/130.jsonl",
-    # "linear": "/mnt/bn/heheda/verl/0910_math_linear/140.jsonl",
-    "user": "/mnt/bn/heheda/verl/0910_math_user/110.jsonl",
-    # "llm": "/mnt/bn/heheda/verl/0910_math_llm/140.jsonl",
-    # "sft": "/mnt/bn/heheda/verl/0912_total_sft/0.jsonl",
-    # "qwen32b": "/mnt/bn/heheda/verl/0911_total_qwen32b/0.jsonl",
-    # "base": "/mnt/bn/heheda/verl/0910_total_base/0.jsonl",
+    # "cobb-douglas": "verl/0910_math_cobb/130.jsonl",
+    # "linear": "verl/0910_math_linear/140.jsonl",
+    "user": "verl/0910_math_user/110.jsonl",
+    # "llm": "verl/0910_math_llm/140.jsonl",
+    # "sft": "verl/0912_total_sft/0.jsonl",
+    # "qwen32b": "verl/0911_total_qwen32b/0.jsonl",
+    # "base": "verl/0910_total_base/0.jsonl",
     },
     "ambig_qa": {
-    "cobb-douglas": "/mnt/bn/heheda/verl/0910_abgqa_cobb/60.jsonl",
-    # "linear": "/mnt/bn/heheda/verl/0910_abgqa_linear/125.jsonl",
-    "user": "/mnt/bn/heheda/verl/0910_abgqa_user/60.jsonl",
-    # "llm": "/mnt/bn/heheda/verl/0910_abgqa_llm/125.jsonl",
-    # "sft": "/mnt/bn/heheda/verl/0912_total_sft/0.jsonl",
-    # "qwen32b": "/mnt/bn/heheda/verl/0911_total_qwen32b/0.jsonl",
-    # "base": "/mnt/bn/heheda/verl/0910_total_base/0.jsonl",
+    "cobb-douglas": "verl/0910_abgqa_cobb/60.jsonl",
+    # "linear": "verl/0910_abgqa_linear/125.jsonl",
+    "user": "verl/0910_abgqa_user/60.jsonl",
+    # "llm": "verl/0910_abgqa_llm/125.jsonl",
+    # "sft": "verl/0912_total_sft/0.jsonl",
+    # "qwen32b": "verl/0911_total_qwen32b/0.jsonl",
+    # "base": "verl/0910_total_base/0.jsonl",
     },
 }
 
 # METHODS = {
-#     "cobb-douglas": "/mnt/bn/heheda/verl/0910_medium_cobb/85.jsonl",
+#     "cobb-douglas": "verl/0910_medium_cobb/85.jsonl",
 # }
 
 # METHODS = {
-#     "cobb-douglas": "/mnt/bn/heheda/verl/0910_wildguard_cobb/130.jsonl",
+#     "cobb-douglas": "verl/0910_wildguard_cobb/130.jsonl",
 # }
 
 

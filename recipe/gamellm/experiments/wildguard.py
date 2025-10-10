@@ -38,10 +38,7 @@ def tied_rank(scores: List[float]) -> List[float]:
     return ranks
 
 if __name__ == "__main__":
-    # path1 = '/mnt/bn/heheda/verl/0911_wildguard_cobb/150.jsonl'
-    # path1 = '/mnt/bn/heheda/verl/0911_wildguard_linear/70.jsonl'
-    # path1 = '/mnt/bn/heheda/verl/0911_wildguard_llm/80.jsonl'
-    path1 = '/mnt/bn/heheda/verl/0911_wildguard_user/120.jsonl'
+    path1 = 'verl/0911_wildguard_user/120.jsonl'
 
     json1 = load_jsonl(path1)
 
