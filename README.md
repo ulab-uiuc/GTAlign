@@ -65,11 +65,11 @@ CUDA_VISIBLE_DEVICES=4,5,6,7 python3 -m sglang.launch_server --model-path Qwen/Q
 you need to change the model and data path in the scripts.
 ```bash
 # verl node
-bash GTAlign/recipe/gamellm/math.sh
-bash GTAlign/recipe/gamellm/medium.sh
-bash GTAlign/recipe/gamellm/adgqa.sh
-bash GTAlign/recipe/gamellm/wildguard.sh
-bash GTAlign/recipe/gamellm/full_zscore.sh
+bash recipe/gamellm/math.sh
+bash recipe/gamellm/medium.sh
+bash recipe/gamellm/adgqa.sh
+bash recipe/gamellm/wildguard.sh
+bash recipe/gamellm/full_zscore.sh
 ```
 
 #### Run OOD evaluation:
@@ -82,16 +82,16 @@ python -m verl.model_merger merge \
     --target_dir xxx
 
 # run evaluation scripts
-bash GTAlign/recipe/gamellm/ablation_advbench.sh
-bash GTAlign/recipe/gamellm/ablation_coqa.sh
-bash GTAlign/recipe/gamellm/ablation_minerva.sh
+bash recipe/gamellm/ablation_advbench.sh
+bash recipe/gamellm/ablation_coqa.sh
+bash recipe/gamellm/ablation_minerva.sh
 ```
 
 ### Dataset
-The dataset used in RL training and evaluation is at `GTAlign/data`
+The dataset used in RL training and evaluation is at `data/`
 
 ### Inference
-We provide inference scripts at `GTAlign/recipe/gamellm/inference/inference_v2.py`. You could modify the payoff matrix during inference to control model behavior.
+We provide inference scripts at `recipe/gamellm/inference/inference_v2.py`. You could modify the payoff matrix during inference to control model behavior.
 
 ## References
 
