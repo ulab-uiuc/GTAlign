@@ -38,9 +38,6 @@ def tied_rank(scores: List[float]) -> List[float]:
     return ranks
 
 if __name__ == "__main__":
-    # path1 = 'verl/0910_total_base/0.jsonl'
-    # path1 = 'verl/0912_total_sft/0.jsonl'
-    # path1 = "verl/0910_abgqa_linear/140.jsonl"
     path1 = "verl/0910_abgqa_user/130.jsonl"
 
     json1 = load_jsonl(path1)

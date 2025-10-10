@@ -6,23 +6,91 @@
 **GTAlign** applies game-theoretic principles to fine-tune reasoning LLMs, encouraging them to make decisions that are not only accurate but also rational, cooperative, and transparent in dialogue settings.
 
 
-## Models
-
-We have released five model checkpoints, and we are preparing more thoroughly trained models.
-
-| Model Name | Size | Dataset | Hugging Face Link |
-|------------|------|--------|--------------------|
-| `GTAlign/Qwen2.5-3B-Math-140step` | 3B | Math | [Model](https://huggingface.co/GTAlign/Qwen2.5-3B-Math-140step) |
-| `GTAlign/Qwen2.5-3B-Medium-110step` | 3B | Medium | [Model](https://huggingface.co/GTAlign/Qwen2.5-3B-Medium-110step) |
-| `GTAlign/Qwen2.5-3B-AbgQA-140step` | 3B | Ambig-QA | [Model](https://huggingface.co/GTAlign/Qwen2.5-3B-AbgQA-140step) |
-| `GTAlign/Qwen2.5-3B-WildGuard-140step` | 3B | WildGuard | [Model](https://huggingface.co/GTAlign/Qwen2.5-3B-WildGuard-140step) |
-| `GTAlign/Qwen2.5-3B-Full-160step` | 3B | Full | [Model](https://huggingface.co/GTAlign/Qwen2.5-3B-Full-160step) |
-
-## 🛠️ Getting Started
+## Getting Started
 
 
+### Installation
 
-## 📚 References
+```shell
+# create a new environment
+conda create -n gtalign python==3.10
+conda activate gtalign
+
+# Install dependencies
+USE_MEGATRON=0 bash scripts/install_vllm_sglang_mcore.sh
+pip install -r requirements.txt
+
+# Install GTAlign
+git clone https://github.com/ulab-uiuc/GTAlign.git
+cd GTAlign
+pip install --no-deps -e .
+```
+
+### Experiments
+
+We recommend using eight NVIDIA H20 GPUs for our experiments.
+
+#### Launch LLM judge using sglang:
+```bash
+## get ipv6/ipv4 address
+cat /etc/hosts
+
+## run judge model on a node different from verl node, using ipv6.
+export CUDA_DEVICE_MAX_CONNECTIONS=1
+export NCCL_SOCKET_IFNAME=eth0
+export NCCL_IB_GID_INDEX=0
+export NCCL_IB_DISABLE=1
+export NCCL_NET_GDR_LEVEL=2
+export NCCL_IB_QPS_PER_CONNECTION=4
+export NCCL_IB_TC=160
+export NCCL_IB_TIMEOUT=22
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python3 -m sglang.launch_server --model-path Qwen/Qwen3-32B --host '::' --mem-fraction-static 0.8 --port port_number --tp 1 --dp 8
+
+# Test on verl node
+curl -v "http://[ipv6]:port_number/v1/models"
+
+# Call from verl node (HTTP/URL with brackets)
+curl -X POST "http://[ipv6]:port_number/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"default","messages":[{"role":"user","content":"hello"}]}'
+
+## serve judge model on the same node as the verl node.
+CUDA_VISIBLE_DEVICES=4,5,6,7 python3 -m sglang.launch_server --model-path Qwen/Qwen3-32B --mem-fraction-static 0.8 --port port_number --tp 4 --dp 1 --reasoning-parser qwen3
+```
+
+#### Run RL training:
+you need to change the model and data path in the scripts.
+```bash
+# verl node
+bash GTAlign/recipe/gamellm/math.sh
+bash GTAlign/recipe/gamellm/medium.sh
+bash GTAlign/recipe/gamellm/adgqa.sh
+bash GTAlign/recipe/gamellm/wildguard.sh
+bash GTAlign/recipe/gamellm/full_zscore.sh
+```
+
+#### Run OOD evaluation:
+you need to change the model and data path in the scripts.
+```bash
+# transform fsdp checkpoint to huggingface checkpoint
+python -m verl.model_merger merge \
+    --backend fsdp \
+    --local_dir xxx \
+    --target_dir xxx
+
+# run evaluation scripts
+bash GTAlign/recipe/gamellm/ablation_advbench.sh
+bash GTAlign/recipe/gamellm/ablation_coqa.sh
+bash GTAlign/recipe/gamellm/ablation_minerva.sh
+```
+
+### Dataset
+The dataset used in RL training and evaluation is at `GTAlign/data`
+
+### Inference
+We provide inference scripts at `GTAlign/recipe/gamellm/inference/inference_v2.py`. You could modify the payoff matrix during inference to control model behavior.
+
+## References
 
 This project builds upon the following open-source repositories:
 
@@ -31,9 +99,8 @@ This project builds upon the following open-source repositories:
 - [collabllm](https://github.com/Wuyxin/collabllm) License: [MIT License](https://github.com/Wuyxin/collabllm/blob/main/LICENSE)
 
 
-## 📄 Citation
+## Citation
 
-If you use Intuitor in your research, please cite our paper:
+If you use GTAlign in your research, please cite our paper:
 ```bibtex
-pass
 ```
