@@ -8,7 +8,7 @@
 
 ## Models
 
-We have released five model checkpoints.
+We have released five model checkpoints, and we are preparing more thoroughly trained models.
 
 | Model Name | Size | Dataset | Hugging Face Link |
 |------------|------|--------|--------------------|
