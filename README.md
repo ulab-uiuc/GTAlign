@@ -2,6 +2,9 @@
 
 [![ArXiv](https://img.shields.io/badge/arXiv-25210.66666-b31b1b?style=flat&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2505.19590)
 [![Hugging Face](https://img.shields.io/badge/HuggingFace-GTAlign-orange?logo=huggingface&logoColor=white)](https://huggingface.co/GTAlign)
+<!-- [![License](https://img.shields.io/badge/LICENSE-Apache2.0-green)](https://github.com/ulab-uiuc/GTAlign/blob/main/LICENSE) -->
+
+
 
 **GTAlign** applies game-theoretic principles to fine-tune reasoning LLMs, encouraging them to make decisions that are not only accurate but also rational, cooperative, and transparent in dialogue settings.
 
