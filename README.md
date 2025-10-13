@@ -1,6 +1,6 @@
 # GTAlign: Game-Theoretic Alignment of LLM Assistants for Mutual Welfare
 
-[![ArXiv](https://img.shields.io/badge/arXiv-25210.66666-b31b1b?style=flat&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2505.19590)
+[![ArXiv](https://img.shields.io/badge/arXiv-2510.08872-b31b1b?style=flat&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2510.08872)
 [![Hugging Face](https://img.shields.io/badge/HuggingFace-GTAlign-orange?logo=huggingface&logoColor=white)](https://huggingface.co/GTAlign)
 <!-- [![License](https://img.shields.io/badge/LICENSE-Apache2.0-green)](https://github.com/ulab-uiuc/GTAlign/blob/main/LICENSE) -->
 
