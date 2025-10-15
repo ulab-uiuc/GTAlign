@@ -104,6 +104,15 @@ This project builds upon the following open-source repositories:
 
 ## Citation
 
-If you use GTAlign in your research, please cite our paper:
+If you find our work helpful to your research, please cite as follows:
 ```bibtex
+@misc{zhu2025gtaligngametheoreticalignmentllm,
+      title={GTAlign: Game-Theoretic Alignment of LLM Assistants for Mutual Welfare}, 
+      author={Siqi Zhu and David Zhang and Pedro Cisneros-Velarde and Jiaxuan You},
+      year={2025},
+      eprint={2510.08872},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2510.08872}, 
+}
 ```
