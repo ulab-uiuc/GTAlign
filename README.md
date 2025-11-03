@@ -1,4 +1,4 @@
-# GTAlign: Game-Theoretic Alignment of LLM Assistants for Mutual Welfare
+# GTAlign: Game-Theoretic Alignment of LLM Assistants for Social Welfare
 
 [![ArXiv](https://img.shields.io/badge/arXiv-2510.08872-b31b1b?style=flat&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2510.08872)
 [![Hugging Face](https://img.shields.io/badge/HuggingFace-GTAlign-orange?logo=huggingface&logoColor=white)](https://huggingface.co/GTAlign)
@@ -107,7 +107,7 @@ This project builds upon the following open-source repositories:
 If you find our work helpful to your research, please cite as follows:
 ```bibtex
 @misc{zhu2025gtaligngametheoreticalignmentllm,
-      title={GTAlign: Game-Theoretic Alignment of LLM Assistants for Mutual Welfare}, 
+      title={GTAlign: Game-Theoretic Alignment of LLM Assistants for Social Welfare}, 
       author={Siqi Zhu and David Zhang and Pedro Cisneros-Velarde and Jiaxuan You},
       year={2025},
       eprint={2510.08872},
